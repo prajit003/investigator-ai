@@ -25,3 +25,5 @@ jobs:
         run: python tests/test_grounding.py
       - name: Synthesis tests
         run: python tests/test_synthesis.py
+      - name: Agent tests
+        run: python tests/test_agents.py
