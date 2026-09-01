@@ -28,11 +28,16 @@ def test_pages_are_served():
 def test_no_external_dependencies():
     """A demo that needs wifi is a demo that can fail live. No CDN, no remote
     fonts, no remote images."""
+    # XML namespace identifiers are not network fetches — an inline SVG data
+    # URI must declare one. Everything else is a real remote dependency.
+    ALLOWED = ("http://www.w3.org/",)
     offenders = []
     for f in FE.rglob("*"):
         if f.suffix not in {".html", ".css", ".js"}:
             continue
         for m in re.finditer(r"https?://[^\s\"')]+", f.read_text()):
+            if m.group(0).startswith(ALLOWED):
+                continue
             offenders.append(f"{f.relative_to(BASE)}: {m.group(0)}")
     assert not offenders, "frontend depends on external resources:\n  " + "\n  ".join(offenders)
     print("  PASS  frontend is fully self-contained")
