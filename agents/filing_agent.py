@@ -39,11 +39,23 @@ NEGATIVE = {
     "contingent": 3, "liability": 2, "negative": 3, "below": 2, "short": 2,
     "increased": 0, "contest": 1, "assessment": 1, "flagged": 3, "compression": 3,
     "borrowing": 2, "shortfall": 3, "impairment": 3,
+    # Widened against real BSE filing text: the original list was tuned on the
+    # synthetic corpus and scored genuine LODR disclosures at exactly zero.
+    # "increased" stays at 0 on purpose — "revenue increased" and "net debt
+    # increased" are opposite claims and the word alone cannot tell them apart.
+    "deteriorated": 3, "subdued": 3, "muted": 3, "headwind": 3, "headwinds": 3,
+    "slowdown": 3, "downturn": 3, "softness": 3, "moderation": 2, "moderated": 2,
+    "litigation": 2, "penalty": 3, "default": 3, "adverse": 3, "unfavourable": 3,
+    "restated": 2, "qualified": 2, "resignation": 1, "writeoff": 3, "provision": 1,
 }
 POSITIVE = {
     "growth": 2, "expanded": 3, "expansion": 2, "ahead": 3, "highest": 3, "improved": 3,
     "favourable": 2, "strong": 2, "record": 3, "consecutive": 2, "reiterated": 1,
     "approved": 1, "visibility": 2, "conversion": 1,
+    "resilient": 2, "robust": 3, "outperformed": 3, "surpassed": 3, "healthy": 2,
+    "sustained": 2, "leadership": 2, "largest": 2, "doubled": 3, "accretive": 2,
+    "upgraded": 3, "momentum": 2, "profitable": 3, "profitability": 2,
+    "competitive": 1, "indigenisation": 1, "commissioned": 2,
 }
 _WORD = re.compile(r"[a-z]+")
 
@@ -133,7 +145,20 @@ async def _model_verdict(symbol: str, chunks) -> _Verdict:
 
 
 async def run(symbol: str, market_data: MarketData | None = None) -> AgentOutput:
-    chunks = retrieve(QUERY, symbol, k=TOP_K)
+    # Live BSE filings first, hand-written corpus behind them. The retrieval and
+    # grounding machinery below is unchanged: whichever pool a chunk came from,
+    # it carries a real chunk_id and its quote is copied from that chunk.
+    from rag.ingest import live_documents_for
+
+    corpus_warnings: list[str] = []
+    try:
+        candidates, corpus_warnings = await live_documents_for(symbol)
+    except Exception as e:
+        candidates, corpus_warnings = None, [f"Live filings unavailable "
+                                             f"({type(e).__name__}); using the "
+                                             f"hand-written corpus."]
+
+    chunks = retrieve(QUERY, symbol, k=TOP_K, candidates=candidates)
 
     # DEGRADED, not neutral: an absent filing is missing information, and a
     # NEUTRAL vote would let that absence influence the synthesis.
@@ -142,7 +167,7 @@ async def run(symbol: str, market_data: MarketData | None = None) -> AgentOutput
             agent_name="filing_detective", symbol=symbol, signal="UNAVAILABLE",
             confidence=0.0, status="DEGRADED",
             reasons=[f"No regulatory filings or transcripts available for {symbol}; "
-                     f"the fundamental view is missing, not neutral."])
+                     f"the fundamental view is missing, not neutral."] + corpus_warnings)
 
     used_model = False
     if os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"):
@@ -167,4 +192,5 @@ async def run(symbol: str, market_data: MarketData | None = None) -> AgentOutput
     out, warnings = attach_verified_evidence(out, v.cited_chunk_ids, chunks)
     if warnings:
         out.reasons.extend(warnings)
+    out.reasons.extend(corpus_warnings)
     return out

@@ -20,6 +20,7 @@ from contracts import (
     AgentOutput, InvestigationResult, JudgeOutput, Personalization,
     Portfolio, Signal, Signals, UserProfile,
 )
+from risk.portfolio import mark_to_market
 from safety import compute_data_quality, compute_metrics, run_agent_safely
 
 LOGS = pathlib.Path(__file__).resolve().parent / "logs"
@@ -132,10 +133,16 @@ async def investigate(symbol: str, user_id: str) -> InvestigationResult:
     symbol = symbol.upper()
     t0 = time.perf_counter()
 
-    market_data = store.snapshot(symbol)
+    market_data, feed_warnings = await store.snapshot_with_warnings(symbol)
     user, portfolio = store.profiles().get(user_id, (None, None))
     if user is None:
         raise KeyError(f"unknown user_id {user_id!r}")
+
+    # Reprice the holdings before the rules read them: concentration_score is
+    # what the conservative downgrade turns on, and a stale one silently changes
+    # the verdict. In fixtures mode this is a no-op fallback to stored values.
+    portfolio, pf_warnings = await mark_to_market(portfolio)
+    feed_warnings = list(feed_warnings) + pf_warnings
 
     ta = time.perf_counter()
     agents = await run_agents(symbol, market_data)
@@ -158,7 +165,10 @@ async def investigate(symbol: str, user_id: str) -> InvestigationResult:
         metrics=compute_metrics(agents, portfolio, (time.perf_counter() - t0) * 1000, agent_ms),
         data_quality=compute_data_quality(
             agents, symbol,
-            extra_warnings=[] if market_data else [f"No market data for {symbol}."]),
+            # feed_warnings names every step down the live -> cache -> fixture
+            # ladder. A fallback the user cannot see is a lie about freshness.
+            extra_warnings=feed_warnings or ([] if market_data
+                                             else [f"No market data for {symbol}."])),
     )
     _log(result, user_id)
     return result

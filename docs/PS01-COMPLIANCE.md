@@ -1,147 +1,161 @@
 # PS-01 compliance audit
 
 Checked against the nine Minimum Requirements in the HACKVERSE PS-01 brief.
-Everything below was verified by running the code, not by reading it: the venv
-is `.venv`, the API was served with `uvicorn main:app --port 8088`, and the
-commands that produced each result are quoted.
+Everything below was verified by running the code against **live market data**,
+not by reading it.
 
-Legend: **MET** / **PARTIAL** / **NOT MET**.
+Reproduce with:
+
+    python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+    DATA_MODE=fixtures .venv/bin/python validate.py      # offline, deterministic
+    DATA_MODE=live .venv/bin/uvicorn main:app --port 8088
+
+---
+
+## Where the data comes from
+
+| Dimension | Source | Verified |
+|---|---|---|
+| Price, volume, 30-day average volume | Moneycontrol NSE quote feed | RELIANCE ₹1,309, provider timestamp `2026-09-01 15:31:20` |
+| Regulatory filings | BSE corporate announcements API + the filed PDFs | 46 announcements for scrip 500325; PDFs download and parse |
+| News sentiment | Google News RSS, India edition | 25 dated, publisher-attributed headlines in a 7-day window |
+| RSI, momentum, volatility | Daily closes this system accumulates itself | Absent until enough sessions exist — and it says so |
+
+Yahoo Finance (429), NSE India (403) and stooq (JS challenge) were tested and
+are unusable. Alpha Vantage, Twelve Data and Finnhub work but need a key; a
+Twelve Data adapter is wired in and activates on `TWELVEDATA_API_KEY`.
+
+**Stated plainly:** the three working sources are undocumented internal APIs,
+not licensed feeds. They can change shape or block an IP without notice, and
+their terms are not a commercial data licence. Every one sits behind the
+`feeds/` provider interface so a licensed feed replaces it by configuration.
 
 ---
 
 ## 1. Signal classification across >= 3 independent dimensions — MET
 
-`GET /api/analyze` returns `signals.price_signal`, `signals.volume_signal` and
-`signals.sentiment_signal`, each with its own `signal`, `confidence` and
-`reasons[]`.
+`signals.price_signal`, `signals.volume_signal` and `signals.sentiment_signal`,
+each with its own signal, confidence and `reasons[]` quoting the rule and the
+real numbers that produced it. Price and volume come from two functions in
+`agents/market_agent.py` that share no terms; `tests/test_agents.py` asserts
+that independence.
 
-Price and volume are computed by two separate functions in
-`agents/market_agent.py` (`price_signal`, `volume_signal`) that share no terms —
-`orchestrator._signals_from` calls them individually rather than reporting one
-agent's verdict twice, and `tests/test_agents.py` asserts that independence.
+Live example, verbatim from the UI:
 
-## 2. RAG grounded in a document corpus, with attribution — MET (backend)
+> Volume 12,613,543 vs 30-day average 10,903,851 = 1.16x — below the 1.5x
+> anomaly threshold, the move is not volume-confirmed (NEUTRAL)
 
-`rag/` ingests the corpus under `data/filings/`; `filing_detective` cites chunk
-ids, and `safety.attach_verified_evidence` -> `rag.retrieve.verify_evidence`
-drops any id that was not actually retrieved and copies the quote verbatim from
-the corpus, so a displayed quote cannot be model-authored.
-`tests/test_grounding.py` proves uncited and cross-symbol evidence cannot reach
-the user.
+## 2. RAG grounded in a document corpus, with attribution — MET
 
-Live check (`symbol=RELIANCE`): two Evidence objects, `REL_SEBI_c1` and
-`REL_Q2FY24_c1`, each carrying `source_name`, `source_type`, `source_date` and
-verbatim `text`.
+`feeds/filings.py` pulls real BSE announcements, downloads the filed PDF,
+extracts text and chunks it. `safety.attach_verified_evidence` ->
+`rag.retrieve.verify_evidence` drops any chunk_id that was not retrieved and
+copies the quote verbatim from the corpus, so a displayed quote cannot be
+model-authored.
 
-Gap: `InvestigationResult.retrieved_chunks` is always `[]` — the retrieval set
-behind the citation is not surfaced, only the cited subset. Attribution is
-satisfied; retrieval transparency is not.
+Verified end to end: the UI cited `BSEE48E0687_c2` from
+*Media Release — Reliance Industries and Rolls-Royce…*, dated 2026-08-14, and
+the quoted sentence was confirmed present character-for-character in the
+downloaded PDF. The citation links to that PDF.
+
+Chunk selection ranks by substance rather than position — a filing opens with a
+registered office address, and citing letterhead as fundamental evidence is
+real, correctly attributed and worthless.
 
 ## 3. >= 3 specialised agents in parallel with a structured contract — MET
 
 `orchestrator.run_agents` dispatches `market_detective`, `news_detective` and
-`filing_detective` under one `asyncio.gather`. Every agent has the identical
-signature `async def run(symbol, market_data) -> AgentOutput`, enforced by
-`validate.py` section [4]. Each call is wrapped in `safety.run_agent_safely`
-(12s timeout, exception capture, schema validation), so an agent is treated as
-untrusted code. `synthesis.judge` is the synthesis layer consuming them.
+`filing_detective` under one `asyncio.gather`, each with the identical signature
+`async def run(symbol, market_data) -> AgentOutput` and each wrapped in
+`safety.run_agent_safely` (12s timeout, exception capture, schema validation).
+The agents now perform their own network I/O, which is exactly the untrusted-
+dependency case that wrapper was built for.
 
 ## 4. User profiling that changes the output — MET
 
-Identical market inputs, different profiles:
+Rules are deterministic and run before any prose is generated. The UI fetches
+both profiles for the same symbol at the same moment, so a difference cannot be
+an artefact of the market moving between two clicks.
 
-    symbol=RELIANCE&user_id=u1  ->  CAUTION  0.67
-    symbol=RELIANCE&user_id=u2  ->  POSITIVE 0.72
+Live, on identical market input:
 
-The rules are deterministic and live in `synthesis.py` before any prose is
-generated (conservative: confidence capped at 0.7, >=2 bullish agents required,
-a bearish agent above 0.6 blocks a positive call, concentration above 25%
-downgrades). `personalization.personalized_reason` names the rule that fired and
-the alternative outcome, which is what the requirement asks for.
+| | Priya (conservative) | Arjun (aggressive) |
+|---|---|---|
+| Verdict | CAUTION | CAUTION |
+| Stated rule | "Only 1 bullish agent(s); a conservative profile requires at least 2" | "No agent reached the conviction threshold for an aggressive position" |
+| Largest position | 30.0% (above the 25% ceiling) | 12.0% |
 
-## 5. Live interface rendering signals, synthesis and portfolio — NOT MET
+On the day of this audit both profiles reach the same verdict for different
+stated reasons, and the UI says so rather than manufacturing a disagreement.
+`tests/test_synthesis.py` pins the case where they diverge; the fixture corpus
+reproduces it deterministically under `DATA_MODE=fixtures`.
 
-`frontend/` is a complete, polished static mockup. It contains no `fetch` call
-and no reference to `/api/`; the profile toggle swaps hardcoded `data-priya` /
-`data-arjun` attributes rather than re-querying the API. The mock also
-contradicts the engine — it shows RELIANCE as "BUY, 82% confidence" for the
-conservative profile where the pipeline returns CAUTION at 0.67.
+## 5. Live interface — MET
 
-This is the largest remaining gap. The backend contract it needs to consume is
-already stable and served from the same origin, so the work is binding, not
-plumbing.
+`frontend/live.js` renders the whole page from one `/api/analyze` response and
+polls every 30 seconds, pausing when the tab is hidden. The previous build was
+a static mockup whose profile toggle swapped two hardcoded strings.
+
+What it shows: live price with the **provider's** timestamp and a STALE badge
+when the quote is not fresh; the three signal dimensions with classification
+labels; one card per agent with its full reasoning and clickable citations; the
+portfolio marked to market with a live allocation ring; and every entry in
+`data_quality.warnings` verbatim.
+
+Content removed rather than rebuilt, because no part of the system computes it:
+the price chart with its invented support and resistance lines, the MACD/SMA
+tiles, and the "Rebalance Suggestions" panel of BUY/REDUCE target weights. An
+invented support level is a price somebody might act on.
+
+Third-party text (filings, headlines) reaches the DOM only through
+`textContent`; `frontend/live.js` contains no `innerHTML`.
 
 ## 6. Performance log, >= 3 metrics per session — MET
 
-Every request appends one JSON line to `logs/sessions.jsonl` with seven metrics:
-`total_latency_ms`, `agent_latency_ms`, `signal_confidence`,
-`evidence_coverage`, `concentration_score`, `agents_complete`, `agents_failed`.
+One JSON line per request in `logs/sessions.jsonl` with seven metrics. Latency
+is now meaningful: a cold request costs ~750 ms against live providers, a warm
+one ~15 ms, against a 12s per-agent timeout and PS-01's 60s budget.
 
-Caveat: with no `ANTHROPIC_API_KEY` set every agent takes the offline path, so
-latency rounds to 0-2 ms. The number is real, but it does not yet demonstrate
-latency under LLM load.
+## 7. End-to-end demo, full reasoning chain visible — MET
 
-## 7. End-to-end demo, full reasoning chain visible — PARTIAL
+Live quote -> three parallel agents -> retrieved filings -> verified citations
+-> rule-decided verdict -> the named rule that personalised it -> metrics, all
+visible in the UI, with each citation opening the source document.
 
-The chain is complete and inspectable through the API — market data -> three
-agents -> evidence with verified citations -> rule-decided verdict ->
-personalized reason -> metrics — but it is visible as JSON, not in the UI. Once
-requirement 5 lands this is MET.
+## 8. Graded degraded-data handling — MET
 
-## 8. Graceful degraded-data handling — MET
+| Scenario | Result |
+|---|---|
+| `KILL_AGENT=news_detective` | 200. news FAILED, verdict still returned, quality DEGRADED, evidence still cited with working links |
+| Unknown symbol, live mode | 200, `INSUFFICIENT_DATA`, quality POOR, no uncited claim |
+| Provider down, auto mode | Falls back live -> cache -> fixture, naming every step in `data_quality.warnings` |
+| Provider down, live mode | Refuses to substitute the fixture and says so |
+| Backend unreachable | UI shows the error overlay instead of leaving stale numbers looking current |
+| Unknown user | 404 — a genuine client error, not a data problem |
 
-Three degradation paths were exercised:
+Two feed-specific defects were found by running against real data and fixed:
 
-    KILL_AGENT=news_detective  ->  news_detective FAILED, verdict still returned,
-                                   overall_quality DEGRADED, evidence still cited
-    symbol=NOPE                ->  200, INSUFFICIENT_DATA, quality POOR, no
-                                   uncited claim
-    user_id=nobody             ->  404 (a genuine client error, not a data problem)
-
-Agent conflict is surfaced rather than averaged away: RELIANCE runs
-market BULLISH + news BULLISH vs filing BEARISH, and `judge_output.agent_conflict`
-is set with the disagreement named in the summary.
-
-Two defects on this path were found and fixed during this audit:
-
-- `synthesis.judge` counted an agent that ran but found no data (signal
-  `UNAVAILABLE`) as a reporting agent, so a symbol with no data anywhere
-  returned CAUTION at 0.0 confidence — a judgement the evidence did not
-  support — instead of INSUFFICIENT_DATA.
-- `safety.compute_data_quality` marked a source AVAILABLE whenever its agent had
-  not crashed, so `market_data: AVAILABLE` was reported next to the warning
-  "No market data for NOPE." The two blocks are read side by side in the UI.
+- **The exchange's own volume counter went backwards mid-session** — 11.6M at
+  15:08, 415k at 15:22, with BSE independently reporting 712k. A ratio computed
+  from that figure reads as "nobody is trading this", which is a claim about the
+  market rather than about our feed. `feeds/quotes.py` now compares reported
+  volume against the 30-day average pro-rated by session progress and marks the
+  dimension UNAVAILABLE when the number is not credible.
+- **Indicators had no honest value on day one.** RSI, momentum and volatility
+  are `Optional` in the contract and stay `None` until enough closes accumulate.
+  The price agent drops those terms and says so, rather than scoring a default
+  of 50.0 as a real reading.
 
 ## 9. Written architecture summary for judges — MET
 
-`docs/ARCHITECTURE.md` (588 lines) is the naming authority; `contracts.py`
-implements it and `validate.py` fails the build on drift.
-`docs/RiskModule.md` covers the profile/risk layer.
+`docs/ARCHITECTURE.md` is the naming authority, with §15 covering the live-data
+addendum; `validate.py` fails the build on drift from it.
 
 ---
 
 ## Summary
 
-| # | Requirement | Status |
-|---|---|---|
-| 1 | Three independent signal dimensions | MET |
-| 2 | RAG with verified attribution | MET |
-| 3 | Three parallel agents, structured contract | MET |
-| 4 | Profile changes the output | MET |
-| 5 | Live interface | NOT MET — static mockup |
-| 6 | Session metrics log | MET |
-| 7 | End-to-end demo, chain visible | PARTIAL — visible as JSON, not in UI |
-| 8 | Degraded-data handling | MET |
-| 9 | Architecture write-up | MET |
-
-Seven of nine met. Both open items are the same piece of work: bind the existing
-frontend to `/api/analyze`.
-
-## Reproducing this audit
-
-    python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-    .venv/bin/python validate.py
-    for t in tests/*.py; do .venv/bin/python $t; done
-    .venv/bin/uvicorn main:app --port 8088
-    curl -s "localhost:8088/api/analyze?symbol=RELIANCE&user_id=u1"
-    KILL_AGENT=news_detective .venv/bin/uvicorn main:app --port 8088
+All nine minimum requirements met. Nothing in the pipeline reads a hand-written
+number in `DATA_MODE=live`; the fixture corpus remains as the bottom rung of the
+fallback ladder, which is what makes the degradation story real rather than
+staged.

@@ -149,7 +149,9 @@ def judge(agents: List[AgentOutput], user: UserProfile,
 def _summary(verdict, user, live, bulls, bears, conflict) -> str:
     """Deterministic prose. Swap for an LLM paragraph later if time allows —
     but the verdict above must stay rule-decided."""
-    parts = [f"{verdict.replace('_', ' ').title()} for a "
+    # "a aggressive investor" is the kind of thing a judge notices out loud.
+    article = "an" if user.risk_profile[:1].upper() in "AEIOU" else "a"
+    parts = [f"{verdict.replace('_', ' ').title()} for {article} "
              f"{user.risk_profile.lower()} investor: "
              f"{len(bulls)} bullish and {len(bears)} bearish of {len(live)} reporting agents."]
     if conflict:

@@ -32,7 +32,12 @@ def price_signal(m: MarketData) -> Signal:
     Deliberately ignores volume so this stays independent of dimension 2."""
     score, reasons = 0.0, []
 
-    if m.momentum >= MOMENTUM_STRONG:
+    if m.momentum is None:
+        # ARCHITECTURE.md §15.2: a missing indicator is missing, not neutral.
+        # Drop the term and say so, rather than scoring it as 0.00 silently.
+        reasons.append("Momentum unavailable (insufficient price history) — "
+                       "term dropped, not scored as neutral")
+    elif m.momentum >= MOMENTUM_STRONG:
         score += 0.50
         reasons.append(f"Momentum {m.momentum:+.2f} >= {MOMENTUM_STRONG:.2f} "
                        f"(strong uptrend, +0.50)")
@@ -51,7 +56,10 @@ def price_signal(m: MarketData) -> Signal:
         score -= 0.20
         reasons.append(f"Session move {m.price_change_percent:+.2f}% (-0.20)")
 
-    if m.rsi >= RSI_OVERBOUGHT:
+    if m.rsi is None:
+        reasons.append("RSI unavailable (needs 15 daily closes) — term dropped, "
+                       "not scored as neutral")
+    elif m.rsi >= RSI_OVERBOUGHT:
         score -= 0.20
         reasons.append(f"RSI {m.rsi:.1f} >= {RSI_OVERBOUGHT:.0f} (overbought, "
                        f"caution against chasing, -0.20)")
@@ -71,6 +79,14 @@ def volume_signal(m: MarketData) -> Signal:
     the session move; it never reads momentum or RSI. Volume is confirmation,
     so an anomaly on a rising price is bullish and on a falling price bearish;
     without an anomaly there is no signal at all."""
+    if m.volume <= 0:
+        # The feed reported no traded quantity, or the quote layer zeroed a
+        # figure it could not believe. Either way we do not know participation,
+        # and "no anomaly" would be a claim we cannot support.
+        return Signal(signal="UNAVAILABLE", confidence=0.0,
+                      reasons=[f"No traded volume reported for {m.symbol}; the "
+                               f"participation dimension is missing, not neutral."])
+
     ratio = m.volume / m.average_volume if m.average_volume else 0.0
     direction = 1 if m.price_change_percent > 0 else -1 if m.price_change_percent < 0 else 0
     reasons = [f"Volume {m.volume:,} vs 30-day average {m.average_volume:,} = {ratio:.1f}x"]
@@ -100,17 +116,32 @@ async def run(symbol: str, market_data: MarketData | None = None) -> AgentOutput
     price, volume = price_signal(market_data), volume_signal(market_data)
 
     # Combine the two independent dimensions into this agent's single verdict.
+    # A dimension can be UNAVAILABLE — no volume was reported, or there is not
+    # enough history for the price terms. Average over the dimensions that
+    # ACTUALLY REPORTED rather than dividing by two regardless, which would
+    # halve a real signal because the other half is missing.
     weights = {"BULLISH": 1, "BEARISH": -1, "NEUTRAL": 0}
-    combined = (weights[price.signal] * price.confidence
-                + weights[volume.signal] * volume.confidence) / 2
+    live = [sig for sig in (price, volume) if sig.signal in weights]
+
+    if not live:
+        return AgentOutput(
+            agent_name="market_detective", symbol=symbol, signal="UNAVAILABLE",
+            confidence=0.0, status="DEGRADED",
+            reasons=([f"PRICE: {r}" for r in price.reasons]
+                     + [f"VOLUME: {r}" for r in volume.reasons]
+                     + ["Neither the price nor the volume dimension reported; "
+                        "the market view is missing, not neutral."]))
+
+    combined = sum(weights[s.signal] * s.confidence for s in live) / len(live)
     label = _label(combined)
     conf = round(min(abs(combined) * 1.6, 1.0), 2)   # scale: agreement earns conviction
 
+    status = "COMPLETE" if len(live) == 2 else "DEGRADED"
     reasons = ([f"PRICE: {r}" for r in price.reasons]
                + [f"VOLUME: {r}" for r in volume.reasons]
                + [f"Combined price {price.signal}@{price.confidence:.2f} with volume "
-                  f"{volume.signal}@{volume.confidence:.2f} -> {label} "
-                  f"at confidence {conf:.2f}"])
+                  f"{volume.signal}@{volume.confidence:.2f} over {len(live)} reporting "
+                  f"dimension(s) -> {label} at confidence {conf:.2f}"])
 
     return AgentOutput(agent_name="market_detective", symbol=symbol, signal=label,
-                       confidence=conf, reasons=reasons, status="COMPLETE")
+                       confidence=conf, reasons=reasons, status=status)

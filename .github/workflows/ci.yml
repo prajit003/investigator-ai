@@ -11,6 +11,12 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    # CI must never depend on a third-party market feed being up, and must never
+    # send traffic to one from a shared runner. Fixture mode makes the build
+    # deterministic and offline; feeds/http.py raises if anything tries to open
+    # a socket in this mode.
+    env:
+      DATA_MODE: fixtures
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -29,3 +35,7 @@ jobs:
         run: python tests/test_agents.py
       - name: Filing agent tests
         run: python tests/test_filing_agent.py
+      - name: Feed layer tests
+        run: python tests/test_feeds.py
+      - name: Indicator tests
+        run: python tests/test_indicators.py

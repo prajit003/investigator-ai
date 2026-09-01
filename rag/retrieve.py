@@ -70,18 +70,24 @@ def _vector(text: str) -> dict[str, float]:
     return {t: w / norm for t, w in v.items()}
 
 
-def retrieve(query: str, symbol: str, k: int = 3) -> list[dict]:
+def retrieve(query: str, symbol: str, k: int = 3,
+             candidates: list[dict] | None = None) -> list[dict]:
     """
     Top-k `retrieved_chunks` for this symbol, each with a relevance_score.
 
     The symbol filter is a hard pre-filter, not a ranking signal: an agent
     analysing RELIANCE must never be able to cite a TCS filing. That is a
-    correctness guarantee, not an optimisation.
+    correctness guarantee, not an optimisation — so a caller-supplied `candidates`
+    pool (the live BSE corpus) is re-filtered here rather than trusted.
 
     Returns [] when no filings exist for the symbol — the caller must then report
     filing_data UNAVAILABLE rather than inventing a fundamental view.
     """
-    candidates = documents_for(symbol)
+    if candidates is None:
+        candidates = documents_for(symbol)
+    else:
+        candidates = [c for c in candidates
+                      if str(c.get("symbol", "")).upper() == symbol.upper()]
     if not candidates:
         return []
     qv = _vector(query)
@@ -106,6 +112,8 @@ def build_evidence(retrieved_chunks: list[dict]) -> list[dict]:
             "section": c["section"],
             "text": c["text"],
             "relevance_score": c.get("relevance_score", 0.0),
+            # Live BSE chunks carry a public link; the fixture corpus does not.
+            "url": c.get("url", ""),
         }
         for c in retrieved_chunks
     ]
