@@ -1,5 +1,5 @@
 {
-  "investigation_id": "CASE-DCC846",
+  "investigation_id": "CASE-145AC5",
   "symbol": "RELIANCE",
   "company_name": "Reliance Industries",
   "market_data": {
@@ -16,24 +16,29 @@
   },
   "signals": {
     "price_signal": {
-      "signal": "UNAVAILABLE",
-      "confidence": 0.0,
+      "signal": "BULLISH",
+      "confidence": 0.5,
       "reasons": [
-        "Agent unavailable: agent not implemented yet"
+        "Momentum +0.18 >= 0.10 (strong uptrend, +0.50)",
+        "Session move +2.29% (+0.20)",
+        "RSI 71.2 >= 70 (overbought, caution against chasing, -0.20)",
+        "Price score +0.50 -> BULLISH at confidence 0.50"
       ]
     },
     "volume_signal": {
-      "signal": "UNAVAILABLE",
-      "confidence": 0.0,
+      "signal": "BULLISH",
+      "confidence": 0.5,
       "reasons": [
-        "Agent unavailable: agent not implemented yet"
+        "Volume 8,200,000 vs 30-day average 4,100,000 = 2.0x",
+        "2.0x >= 1.5x on a rising price confirms the move (+0.50) -> BULLISH at confidence 0.50"
       ]
     },
     "sentiment_signal": {
-      "signal": "UNAVAILABLE",
-      "confidence": 0.0,
+      "signal": "BULLISH",
+      "confidence": 0.6,
       "reasons": [
-        "Agent unavailable: agent not implemented yet"
+        "5 headline(s): 3 positive, 2 negative, net lexicon score +6 -> BULLISH at confidence 0.60",
+        "Strongest signal (+4): \"Reliance Industries hits fresh 52-week high as retail arm posts record festive quarter\""
       ]
     }
   },
@@ -41,60 +46,140 @@
     {
       "agent_name": "market_detective",
       "symbol": "RELIANCE",
-      "signal": "UNAVAILABLE",
-      "confidence": 0.0,
+      "signal": "BULLISH",
+      "confidence": 0.8,
       "reasons": [
-        "Agent unavailable: agent not implemented yet"
+        "PRICE: Momentum +0.18 >= 0.10 (strong uptrend, +0.50)",
+        "PRICE: Session move +2.29% (+0.20)",
+        "PRICE: RSI 71.2 >= 70 (overbought, caution against chasing, -0.20)",
+        "PRICE: Price score +0.50 -> BULLISH at confidence 0.50",
+        "VOLUME: Volume 8,200,000 vs 30-day average 4,100,000 = 2.0x",
+        "VOLUME: 2.0x >= 1.5x on a rising price confirms the move (+0.50) -> BULLISH at confidence 0.50",
+        "Combined price BULLISH@0.50 with volume BULLISH@0.50 -> BULLISH at confidence 0.80"
       ],
       "evidence": [],
-      "status": "FAILED",
+      "status": "COMPLETE",
       "latency_ms": 0
     },
     {
       "agent_name": "news_detective",
       "symbol": "RELIANCE",
-      "signal": "UNAVAILABLE",
-      "confidence": 0.0,
+      "signal": "BULLISH",
+      "confidence": 0.6,
       "reasons": [
-        "Agent unavailable: agent not implemented yet"
+        "5 headline(s): 3 positive, 2 negative, net lexicon score +6 -> BULLISH at confidence 0.60",
+        "Strongest signal (+4): \"Reliance Industries hits fresh 52-week high as retail arm posts record festive quarter\""
       ],
       "evidence": [],
-      "status": "FAILED",
+      "status": "COMPLETE",
       "latency_ms": 0
     },
     {
       "agent_name": "filing_detective",
       "symbol": "RELIANCE",
-      "signal": "UNAVAILABLE",
-      "confidence": 0.0,
+      "signal": "BEARISH",
+      "confidence": 0.75,
       "reasons": [
-        "Agent unavailable: agent not implemented yet"
+        "Lexicon assessment of 3 retrieved filing excerpt(s): Balance Sheet (+0), Risk Factors (-3), Segment Performance (-7). Net fundamental tone -10 -> BEARISH.",
+        "Retrieved 3 chunk(s) from the filings corpus; assessed by deterministic lexicon."
       ],
-      "evidence": [],
-      "status": "FAILED",
+      "evidence": [
+        {
+          "chunk_id": "REL_SEBI_c1",
+          "source_name": "Reliance SEBI Related Party Disclosure FY24",
+          "source_type": "FILING",
+          "source_date": "2026-06-30",
+          "page": 12,
+          "section": "Risk Factors",
+          "text": "The Audit Committee reviewed related party transactions aggregating 8,940 crore rupees during the financial year. Two transactions involving the new energy subsidiary were flagged for enhanced disclosure following an internal review.",
+          "relevance_score": 0.0721
+        },
+        {
+          "chunk_id": "REL_Q2FY24_c1",
+          "source_name": "Reliance Q2 FY24 Earnings Call",
+          "source_type": "TRANSCRIPT",
+          "source_date": "2026-07-21",
+          "page": 4,
+          "section": "Segment Performance",
+          "text": "EBITDA margin for the quarter stood at 16.4%, down 140 basis points year on year, primarily on weaker petrochemical spreads. Polymer deltas remained under pressure through the quarter and we do not expect a meaningful recovery before the second half of FY25.",
+          "relevance_score": 0.0435
+        }
+      ],
+      "status": "COMPLETE",
       "latency_ms": 0
     }
   ],
   "retrieved_chunks": [],
-  "evidence": [],
+  "evidence": [
+    {
+      "chunk_id": "REL_SEBI_c1",
+      "source_name": "Reliance SEBI Related Party Disclosure FY24",
+      "source_type": "FILING",
+      "source_date": "2026-06-30",
+      "page": 12,
+      "section": "Risk Factors",
+      "text": "The Audit Committee reviewed related party transactions aggregating 8,940 crore rupees during the financial year. Two transactions involving the new energy subsidiary were flagged for enhanced disclosure following an internal review.",
+      "relevance_score": 0.0721
+    },
+    {
+      "chunk_id": "REL_Q2FY24_c1",
+      "source_name": "Reliance Q2 FY24 Earnings Call",
+      "source_type": "TRANSCRIPT",
+      "source_date": "2026-07-21",
+      "page": 4,
+      "section": "Segment Performance",
+      "text": "EBITDA margin for the quarter stood at 16.4%, down 140 basis points year on year, primarily on weaker petrochemical spreads. Polymer deltas remained under pressure through the quarter and we do not expect a meaningful recovery before the second half of FY25.",
+      "relevance_score": 0.0435
+    }
+  ],
   "bull_case": null,
   "bear_case": null,
   "judge_output": {
-    "verdict": "INSUFFICIENT_DATA",
-    "confidence": 0.0,
-    "summary": "Insufficient Data for a conservative investor: 0 bullish and 0 bearish of 0 reporting agents.",
-    "key_reasons": [],
-    "key_risks": [],
-    "selected_evidence": [],
-    "agent_agreement": 0,
-    "agent_conflict": false
+    "verdict": "CAUTION",
+    "confidence": 0.667,
+    "summary": "Caution for a conservative investor: 2 bullish and 1 bearish of 3 reporting agents. The agents disagree, and we surface that rather than averaging it away.",
+    "key_reasons": [
+      "PRICE: Momentum +0.18 >= 0.10 (strong uptrend, +0.50)",
+      "PRICE: Session move +2.29% (+0.20)",
+      "PRICE: RSI 71.2 >= 70 (overbought, caution against chasing, -0.20)",
+      "PRICE: Price score +0.50 -> BULLISH at confidence 0.50",
+      "VOLUME: Volume 8,200,000 vs 30-day average 4,100,000 = 2.0x"
+    ],
+    "key_risks": [
+      "Lexicon assessment of 3 retrieved filing excerpt(s): Balance Sheet (+0), Risk Factors (-3), Segment Performance (-7). Net fundamental tone -10 -> BEARISH.",
+      "Retrieved 3 chunk(s) from the filings corpus; assessed by deterministic lexicon."
+    ],
+    "selected_evidence": [
+      {
+        "chunk_id": "REL_SEBI_c1",
+        "source_name": "Reliance SEBI Related Party Disclosure FY24",
+        "source_type": "FILING",
+        "source_date": "2026-06-30",
+        "page": 12,
+        "section": "Risk Factors",
+        "text": "The Audit Committee reviewed related party transactions aggregating 8,940 crore rupees during the financial year. Two transactions involving the new energy subsidiary were flagged for enhanced disclosure following an internal review.",
+        "relevance_score": 0.0721
+      },
+      {
+        "chunk_id": "REL_Q2FY24_c1",
+        "source_name": "Reliance Q2 FY24 Earnings Call",
+        "source_type": "TRANSCRIPT",
+        "source_date": "2026-07-21",
+        "page": 4,
+        "section": "Segment Performance",
+        "text": "EBITDA margin for the quarter stood at 16.4%, down 140 basis points year on year, primarily on weaker petrochemical spreads. Polymer deltas remained under pressure through the quarter and we do not expect a meaningful recovery before the second half of FY25.",
+        "relevance_score": 0.0435
+      }
+    ],
+    "agent_agreement": 2,
+    "agent_conflict": true
   },
   "personalization": {
     "risk_profile": "CONSERVATIVE",
     "risk_score": 25,
     "investment_horizon": "LONG_TERM",
     "stock_exposure": 0.3,
-    "personalized_reason": "Every agent failed, so no view can be justified. We report this rather than presenting an unsupported recommendation. Confidence reduced: market_detective, news_detective, filing_detective unavailable."
+    "personalized_reason": "A bearish agent above 0.6 confidence blocks a positive call for a conservative profile. An aggressive profile would tolerate a single dissenting agent."
   },
   "portfolio": {
     "portfolio_value": 500000.0,
@@ -141,23 +226,19 @@
   },
   "scenario": null,
   "metrics": {
-    "total_latency_ms": 0,
-    "agent_latency_ms": 0,
-    "signal_confidence": 0.0,
-    "evidence_coverage": 0.0,
+    "total_latency_ms": 1,
+    "agent_latency_ms": 1,
+    "signal_confidence": 0.7167,
+    "evidence_coverage": 0.3333,
     "concentration_score": 30.0,
-    "agents_complete": 0,
-    "agents_failed": 3
+    "agents_complete": 3,
+    "agents_failed": 0
   },
   "data_quality": {
-    "market_data": "UNAVAILABLE",
-    "news_data": "UNAVAILABLE",
-    "filing_data": "UNAVAILABLE",
-    "overall_quality": "POOR",
-    "warnings": [
-      "market_detective unavailable; confidence reduced.",
-      "news_detective unavailable; confidence reduced.",
-      "filing_detective unavailable; confidence reduced."
-    ]
+    "market_data": "AVAILABLE",
+    "news_data": "AVAILABLE",
+    "filing_data": "AVAILABLE",
+    "overall_quality": "GOOD",
+    "warnings": []
   }
 }

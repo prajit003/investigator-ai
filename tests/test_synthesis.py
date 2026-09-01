@@ -62,10 +62,26 @@ def test_conservative_never_exceeds_cap():
     print("  PASS  conservative confidence is capped at 0.7")
 
 
+def test_reliance_is_the_conflict_showcase():
+    """The rehearsed demo depends on RELIANCE disagreeing across agents AND
+    diverging across profiles. If either breaks, the demo breaks live."""
+    import asyncio
+    from orchestrator import investigate
+    a = asyncio.run(investigate("RELIANCE", "u1"))
+    b = asyncio.run(investigate("RELIANCE", "u2"))
+    assert a.judge_output.agent_conflict, "RELIANCE no longer shows agent disagreement"
+    assert a.evidence, "RELIANCE has no citation to click"
+    assert a.judge_output.verdict != b.judge_output.verdict, (
+        f"RELIANCE no longer diverges by profile: {a.judge_output.verdict}")
+    print(f"  PASS  RELIANCE demo intact: conflict + {len(a.evidence)} citation(s), "
+          f"u1={a.judge_output.verdict} u2={b.judge_output.verdict}")
+
+
 if __name__ == "__main__":
     print("synthesis tests")
     test_profiles_diverge()
     test_conflict_is_surfaced()
     test_all_agents_dead_is_insufficient_data()
     test_conservative_never_exceeds_cap()
+    test_reliance_is_the_conflict_showcase()
     print("\nALL SYNTHESIS TESTS PASSED")

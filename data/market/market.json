@@ -1,20 +1,38 @@
 [
   {
-    "symbol": "RELIANCE", "company_name": "Reliance Industries",
-    "current_price": 2890.50, "price_change": 64.80, "price_change_percent": 2.29,
-    "volume": 8200000, "average_volume": 4100000,
-    "rsi": 71.2, "momentum": 0.18, "volatility": 0.22
+    "symbol": "RELIANCE",
+    "company_name": "Reliance Industries",
+    "current_price": 2890.5,
+    "price_change": 64.8,
+    "price_change_percent": 2.29,
+    "volume": 8200000,
+    "average_volume": 4100000,
+    "rsi": 71.2,
+    "momentum": 0.18,
+    "volatility": 0.22
   },
   {
-    "symbol": "TCS", "company_name": "Tata Consultancy Services",
-    "current_price": 4120.00, "price_change": 47.30, "price_change_percent": 1.16,
-    "volume": 2600000, "average_volume": 2200000,
-    "rsi": 62.4, "momentum": 0.09, "volatility": 0.14
+    "symbol": "TCS",
+    "company_name": "Tata Consultancy Services",
+    "current_price": 4120.0,
+    "price_change": 47.3,
+    "price_change_percent": 1.16,
+    "volume": 3500000,
+    "average_volume": 2200000,
+    "rsi": 62.4,
+    "momentum": 0.15,
+    "volatility": 0.14
   },
   {
-    "symbol": "ZOMATO", "company_name": "Zomato Ltd",
-    "current_price": 218.40, "price_change": -12.60, "price_change_percent": -5.45,
-    "volume": 41000000, "average_volume": 19000000,
-    "rsi": 28.7, "momentum": -0.21, "volatility": 0.39
+    "symbol": "ZOMATO",
+    "company_name": "Zomato Ltd",
+    "current_price": 218.4,
+    "price_change": -12.6,
+    "price_change_percent": -5.45,
+    "volume": 41000000,
+    "average_volume": 19000000,
+    "rsi": 28.7,
+    "momentum": -0.21,
+    "volatility": 0.39
   }
 ]

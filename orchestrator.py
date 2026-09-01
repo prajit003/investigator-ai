@@ -72,7 +72,7 @@ async def run_agents(symbol: str, market_data) -> List[AgentOutput]:
     return out
 
 
-def _signals_from(agents: List[AgentOutput]) -> Signals:
+def _signals_from(agents: List[AgentOutput], market_data=None) -> Signals:
     """Project agent outputs onto the three dimensions PS-01 requires."""
     by = {a.agent_name: a for a in agents}
 
@@ -83,10 +83,19 @@ def _signals_from(agents: List[AgentOutput]) -> Signals:
                           reasons=[a.reasons[0] if a and a.reasons else "agent unavailable"])
         return Signal(signal=a.signal, confidence=a.confidence, reasons=list(a.reasons))
 
-    m = sig("market_detective")
-    # price and volume are both produced by the market agent; it reports them
-    # separately in `reasons`, and P4 may later split it into two modules.
-    return Signals(price_signal=m, volume_signal=m, sentiment_signal=sig("news_detective"))
+    # PS-01 requires three INDEPENDENT dimensions. price and volume come from
+    # separate computations in the market agent that share no terms; reporting
+    # the same object twice would be one dimension counted twice.
+    market = by.get("market_detective")
+    if market is None or market.status == "FAILED" or market_data is None:
+        why = market.reasons[0] if market and market.reasons else "market agent unavailable"
+        price = volume = Signal(signal="UNAVAILABLE", confidence=0.0, reasons=[why])
+    else:
+        from agents.market_agent import price_signal, volume_signal
+        price, volume = price_signal(market_data), volume_signal(market_data)
+
+    return Signals(price_signal=price, volume_signal=volume,
+                   sentiment_signal=sig("news_detective"))
 
 
 def _synthesize(agents: List[AgentOutput], user: UserProfile,
@@ -140,7 +149,7 @@ async def investigate(symbol: str, user_id: str) -> InvestigationResult:
         symbol=symbol,
         company_name=market_data.company_name if market_data else "",
         market_data=market_data,
-        signals=_signals_from(agents),
+        signals=_signals_from(agents, market_data),
         agent_outputs=agents,
         evidence=evidence,
         judge_output=judge_output,
