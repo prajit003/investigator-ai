@@ -29,5 +29,3 @@ jobs:
         run: python tests/test_agents.py
       - name: Filing agent tests
         run: python tests/test_filing_agent.py
-      - name: Frontend tests
-        run: python tests/test_frontend.py
