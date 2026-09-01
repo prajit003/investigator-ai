@@ -1,0 +1,40 @@
+{
+  "u1": {
+    "user_id": "u1",
+    "user_name": "Priya",
+    "risk_profile": "CONSERVATIVE",
+    "risk_score": 20,
+    "investment_horizon": "LONG_TERM",
+    "portfolio": {
+      "portfolio_value": 500000,
+      "holdings": [
+        {"symbol": "RELIANCE", "quantity": 60, "average_price": 2500, "current_value": 150000},
+        {"symbol": "TCS", "quantity": 30, "average_price": 3500, "current_value": 105000},
+        {"symbol": "HDFCBANK", "quantity": 100, "average_price": 1500, "current_value": 150000},
+        {"symbol": "INFY", "quantity": 50, "average_price": 1900, "current_value": 95000}
+      ]
+    }
+  },
+  "u2": {
+    "user_id": "u2",
+    "user_name": "Arjun",
+    "risk_profile": "AGGRESSIVE",
+    "risk_score": 85,
+    "investment_horizon": "SHORT_TERM",
+    "portfolio": {
+      "portfolio_value": 499400,
+      "holdings": [
+        {"symbol": "RELIANCE", "quantity": 24, "average_price": 2500, "current_value": 60000},
+        {"symbol": "TCS", "quantity": 14, "average_price": 3500, "current_value": 49000},
+        {"symbol": "HDFCBANK", "quantity": 33, "average_price": 1500, "current_value": 49500},
+        {"symbol": "INFY", "quantity": 26, "average_price": 1900, "current_value": 49400},
+        {"symbol": "ICICIBANK", "quantity": 40, "average_price": 950, "current_value": 38000},
+        {"symbol": "SBIN", "quantity": 60, "average_price": 600, "current_value": 36000},
+        {"symbol": "ITC", "quantity": 100, "average_price": 440, "current_value": 44000},
+        {"symbol": "LT", "quantity": 15, "average_price": 3600, "current_value": 54000},
+        {"symbol": "BHARTIARTL", "quantity": 40, "average_price": 1550, "current_value": 62000},
+        {"symbol": "MARUTI", "quantity": 5, "average_price": 11500, "current_value": 57500}
+      ]
+    }
+  }
+}
