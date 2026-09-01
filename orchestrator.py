@@ -197,7 +197,7 @@ def _compute_metrics(
         if ok_agents else 0.0
     )
     
-    concentration_score = profile.max_holding_pct
+    concentration_score = profile.max_holding_pct if profile else 0.0
     
     return Metrics(
         total_latency_ms=total_latency_ms,
