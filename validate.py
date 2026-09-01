@@ -110,8 +110,10 @@ def check_data() -> None:
         if not p.holdings or p.portfolio_value <= 0:
             continue
         actual = round(max(h.current_value for h in p.holdings) / p.portfolio_value * 100, 2)
-        check(f"{uid} concentration_score is accurate", abs(actual - p.concentration_score) < 0.01,
-              f"declares {p.concentration_score}, holdings say {actual}")
+        # store derives this from the holdings; a zero here means the derivation
+        # was skipped, which silently disables the conservative downgrade rule.
+        check(f"{uid} concentration_score is derived", abs(actual - p.concentration_score) < 0.01,
+              f"reports {p.concentration_score}, holdings say {actual}")
 
     risks = {p[0].risk_profile for p in profs.values()}
     check("profiles differ in risk_profile", len(risks) >= 2,
