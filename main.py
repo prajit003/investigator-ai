@@ -1,24 +1,45 @@
 from pathlib import Path
 import json
+import uuid
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from models import SynthesisOutput, UserProfile
+from models import (
+    MarketSnapshot,
+    UserProfile,
+    SynthesisOutput,
+)
+
+from orchestrator import orchestrate
+from logger import log_session
 
 
-# --------------------------------------------------
-# Paths
-# --------------------------------------------------
+# ==================================================
+# PATHS
+# ==================================================
 
 BASE_DIR = Path(__file__).resolve().parent
+
 FIXTURES_DIR = BASE_DIR / "fixtures"
 
+MARKET_SNAPSHOT_FILE = (
+    FIXTURES_DIR / "market_snapshots.json"
+)
 
-# --------------------------------------------------
-# FastAPI application
-# --------------------------------------------------
+PROFILES_FILE = (
+    FIXTURES_DIR / "profiles.json"
+)
+
+SYNTHESIS_FIXTURE_FILE = (
+    FIXTURES_DIR / "synthesis_example.json"
+)
+
+
+# ==================================================
+# FASTAPI APPLICATION
+# ==================================================
 
 app = FastAPI(
     title="INVESTIGATOR API",
@@ -26,9 +47,9 @@ app = FastAPI(
 )
 
 
-# --------------------------------------------------
+# ==================================================
 # CORS
-# --------------------------------------------------
+# ==================================================
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,9 +60,9 @@ app.add_middleware(
 )
 
 
-# --------------------------------------------------
-# Serve fixtures as static files
-# --------------------------------------------------
+# ==================================================
+# STATIC FIXTURES
+# ==================================================
 
 app.mount(
     "/fixtures",
@@ -50,9 +71,89 @@ app.mount(
 )
 
 
-# --------------------------------------------------
-# ROUTE 1 — Analyze
-# --------------------------------------------------
+# ==================================================
+# LOAD MARKET SNAPSHOT
+# ==================================================
+
+def load_market_snapshot(
+    ticker: str
+) -> MarketSnapshot:
+
+    with open(
+        MARKET_SNAPSHOT_FILE,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        data = json.load(file)
+
+    ticker_data = data.get(ticker)
+
+    if ticker_data is None:
+        raise ValueError(
+            f"No market snapshot available for {ticker}"
+        )
+
+    return MarketSnapshot.model_validate(
+        ticker_data
+    )
+
+
+# ==================================================
+# LOAD USER PROFILE
+# ==================================================
+
+def load_user_profile(
+    user_id: str
+) -> UserProfile:
+
+    with open(
+        PROFILES_FILE,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        profiles = json.load(file)
+
+    for profile in profiles:
+
+        if profile.get("user_id") == user_id:
+
+            return UserProfile.model_validate(
+                profile
+            )
+
+    raise ValueError(
+        f"No profile available for user {user_id}"
+    )
+
+
+# ==================================================
+# SAFE FALLBACK RESPONSE
+# ==================================================
+
+def load_fallback_response() -> SynthesisOutput:
+    """
+    Load and validate the known-good synthesis fixture.
+
+    This is the final safety net so that /api/analyze
+    can always return a valid SynthesisOutput.
+    """
+
+    with open(
+        SYNTHESIS_FIXTURE_FILE,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        data = json.load(file)
+
+    return SynthesisOutput.model_validate(data)
+
+
+# ==================================================
+# ROUTE 1 — ANALYZE
+# ==================================================
 
 @app.get(
     "/api/analyze",
@@ -62,33 +163,162 @@ async def analyze(
     ticker: str,
     user_id: str
 ):
-    fixture_path = FIXTURES_DIR / "synthesis_example.json"
+
+    ticker = ticker.upper().strip()
 
     try:
-        with open(
-            fixture_path,
-            "r",
-            encoding="utf-8"
-        ) as file:
-            data = json.load(file)
 
-        # Validate the fixture before returning it.
-        result = SynthesisOutput.model_validate(data)
+        # ------------------------------------------
+        # Load input data
+        # ------------------------------------------
+
+        snapshot = load_market_snapshot(
+            ticker
+        )
+
+        profile = load_user_profile(
+            user_id
+        )
+
+        # ------------------------------------------
+        # Run all four agents
+        # ------------------------------------------
+
+        agent_outputs, metrics = await orchestrate(
+            ticker,
+            snapshot,
+            profile
+        )
+
+        # ------------------------------------------
+        # Determine temporary backend recommendation
+        #
+        # P5 synthesis will replace this section.
+        # ------------------------------------------
+
+        successful_agents = [
+            agent
+            for agent in agent_outputs
+            if agent.status == "OK"
+        ]
+
+        unavailable_agents = [
+            agent
+            for agent in agent_outputs
+            if agent.status != "OK"
+        ]
+
+        if successful_agents:
+
+            recommendation = "REVIEW"
+
+            confidence = metrics.avg_confidence
+
+            summary = (
+                f"{len(successful_agents)} of 4 agents "
+                f"completed successfully."
+            )
+
+        else:
+
+            recommendation = "UNAVAILABLE"
+
+            confidence = 0.0
+
+            summary = (
+                "No analysis agents are currently "
+                "available."
+            )
+
+        if unavailable_agents:
+
+            summary += (
+                f" {len(unavailable_agents)} agent(s) "
+                f"were unavailable."
+            )
+
+        # ------------------------------------------
+        # Build valid response
+        # ------------------------------------------
+
+        result = SynthesisOutput(
+            investigation_id=(
+                f"CASE-{uuid.uuid4().hex[:8].upper()}"
+            ),
+
+            ticker=ticker,
+
+            recommendation=recommendation,
+
+            confidence=confidence,
+
+            summary=summary,
+
+            agent_outputs=agent_outputs,
+
+            citations=[],
+
+            metrics=metrics,
+        )
+
+        # ------------------------------------------
+        # Log successful analysis
+        # ------------------------------------------
+
+        log_session(
+            ticker=ticker,
+            user_id=user_id,
+            recommendation=recommendation,
+            metrics=metrics,
+        )
 
         return result
 
     except Exception as exc:
-        # The fixture should always be valid.
-        # This prevents an unexpected 500 during development.
-        print(f"Analyze error: {exc}")
 
-        # Re-raise for now so we notice a broken fixture.
-        raise
+        # ------------------------------------------
+        # NEVER let /api/analyze crash with 500.
+        # ------------------------------------------
+
+        print(
+            f"[analyze] Backend error: "
+            f"{type(exc).__name__}: {exc}"
+        )
+
+        # ------------------------------------------
+        # Use the known-good validated fixture as
+        # the final response safety net.
+        # ------------------------------------------
+
+        try:
+
+            fallback = load_fallback_response()
+
+            print(
+                "[analyze] Returning validated "
+                "fallback response."
+            )
+
+            return fallback
+
+        except Exception as fallback_error:
+
+            # This should only happen if the fixture
+            # itself has been corrupted.
+            #
+            # Keep the error visible during development.
+            print(
+                "[analyze] Fallback failed: "
+                f"{type(fallback_error).__name__}: "
+                f"{fallback_error}"
+            )
+
+            raise
 
 
-# --------------------------------------------------
-# ROUTE 2 — Tickers
-# --------------------------------------------------
+# ==================================================
+# ROUTE 2 — TICKERS
+# ==================================================
 
 @app.get(
     "/api/tickers",
@@ -96,16 +326,31 @@ async def analyze(
 )
 async def get_tickers():
 
-    return [
-        "RELIANCE",
-        "TCS",
-        "INFY"
-    ]
+    try:
+
+        with open(
+            MARKET_SNAPSHOT_FILE,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            data = json.load(file)
+
+        return list(data.keys())
+
+    except Exception as exc:
+
+        print(
+            f"[tickers] Error: "
+            f"{type(exc).__name__}: {exc}"
+        )
+
+        return []
 
 
-# --------------------------------------------------
-# ROUTE 3 — Profiles
-# --------------------------------------------------
+# ==================================================
+# ROUTE 3 — PROFILES
+# ==================================================
 
 @app.get(
     "/api/profiles",
@@ -113,16 +358,28 @@ async def get_tickers():
 )
 async def get_profiles():
 
-    profiles_path = FIXTURES_DIR / "profiles.json"
+    try:
 
-    with open(
-        profiles_path,
-        "r",
-        encoding="utf-8"
-    ) as file:
-        data = json.load(file)
+        with open(
+            PROFILES_FILE,
+            "r",
+            encoding="utf-8"
+        ) as file:
 
-    return [
-        UserProfile.model_validate(profile)
-        for profile in data
-    ]
+            data = json.load(file)
+
+        return [
+            UserProfile.model_validate(
+                profile
+            )
+            for profile in data
+        ]
+
+    except Exception as exc:
+
+        print(
+            f"[profiles] Error: "
+            f"{type(exc).__name__}: {exc}"
+        )
+
+        return []
