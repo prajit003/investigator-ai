@@ -78,6 +78,10 @@ class Signals(Strict):
 # ---- 6. RAG ----
 class Evidence(Strict):
     """Built by rag.build_evidence. `text` is copied verbatim from the corpus."""
+    # Additive vs ARCHITECTURE.md §6: the corpus id this quote came from. It is
+    # the provenance handle the grounding guard verifies against and the key the
+    # UI uses to link a citation back to its source. Agreed as an addition.
+    chunk_id: str = ""
     source_name: str
     source_type: SourceType = "FILING"
     source_date: str = ""
