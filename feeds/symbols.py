@@ -48,7 +48,10 @@ def _from_seed(symbol: str) -> Optional[dict]:
         return None
     return {"symbol": row["symbol"].upper(), "mc_scid": row.get("mc_scid", ""),
             "bse_code": row.get("bse_code", ""), "isin": row.get("isin", ""),
-            "company_name": row.get("company_name", "")}
+            "company_name": row.get("company_name", ""),
+            # The id the exchange currently lists under, when it differs from
+            # the name people search by (NSE renamed ZOMATO to ETERNAL).
+            "nse_id": row.get("nse_id", row["symbol"]).upper()}
 
 
 async def resolve(symbol: str) -> Optional[dict]:
@@ -66,7 +69,7 @@ async def resolve(symbol: str) -> Optional[dict]:
 
     cached = cache.get_symbol(symbol)
     if cached:
-        return cached
+        return {**cached, "nse_id": cached.get("nse_id") or symbol}
 
     try:
         rows = await http.fetch_json(
@@ -92,5 +95,7 @@ async def resolve(symbol: str) -> Optional[dict]:
                    "bse_code": bits[2], "isin": bits[0],
                    "company_name": row.get("name", "")}
             cache.put_symbol(**out)
-            return out
+            # An exact-match resolution is by definition listed under the
+            # symbol we asked for.
+            return {**out, "nse_id": symbol}
     return None

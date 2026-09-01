@@ -52,8 +52,12 @@ async def _moneycontrol(symbol: str) -> Optional[dict]:
 
     # Guard against the resolver having handed us the wrong company: the feed
     # echoes the NSE id back, so a mismatch is detectable rather than silent.
+    # Compared against the id the EXCHANGE lists under, which is not always the
+    # symbol people search by — NSE renamed ZOMATO to ETERNAL, and rejecting
+    # that echo would silently drop a company from the watchlist.
     echoed = str(data.get("NSEID", "")).upper()
-    if echoed and echoed != symbol.upper():
+    expected = (ref.get("nse_id") or symbol).upper()
+    if echoed and echoed != expected:
         return None
 
     return {

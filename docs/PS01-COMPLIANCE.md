@@ -8,7 +8,7 @@ Reproduce with:
 
     python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
     DATA_MODE=fixtures .venv/bin/python validate.py      # offline, deterministic
-    DATA_MODE=live .venv/bin/uvicorn main:app --port 8088
+    DATA_MODE=live .venv/bin/uvicorn main:app --port 3000
 
 ---
 

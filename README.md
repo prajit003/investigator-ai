@@ -12,7 +12,7 @@ for the requirement-by-requirement audit and
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/uvicorn main:app --port 8088          # then open http://localhost:8088
+.venv/bin/uvicorn main:app --port 3000          # then open http://localhost:3000
 ```
 
 No API key is needed. `ANTHROPIC_API_KEY` upgrades the fundamental agent from a
@@ -27,6 +27,25 @@ from the first run.
 | `auto` (default) | Live, falling back to the last-known-good cache, then the hand-written fixtures. Every step down is named in `data_quality.warnings`. |
 | `live` | Live only. A provider failure degrades that dimension instead of substituting a fixture — this is the mode to demo honest failure in. |
 | `fixtures` | Never opens a socket. CI and `validate.py` run here, so the build is deterministic and offline. |
+
+## The full live checklist
+
+`validate.py` proves the contract holds offline. `checklist.py` proves the
+system works against the real providers — 317 checks across symbol resolution,
+quotes, indicators, news, filings, agents, the grounding guard, the pipeline,
+personalization, degradation, the session log, the HTTP API and the served
+frontend:
+
+```bash
+DATA_MODE=live .venv/bin/python checklist.py --api
+```
+
+A check passes only when what came back is traceable to a real source: a
+provider timestamp within minutes of now, a chunk id that exists in the corpus,
+a quote copied out of the document it cites. Indicators that need history the
+system has not accumulated yet are reported as not-yet-applicable rather than
+failed — absent and honest about it is the correct state, and
+`tests/test_indicators.py` covers the maths offline.
 
 ## Before pushing
 

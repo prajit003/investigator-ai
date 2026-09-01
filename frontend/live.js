@@ -202,10 +202,11 @@ function render(d) {
     profile_impact_label: `Impact for a ${titleCase(pers.risk_profile)} profile:`,
     portfolio_value: rupees(pf.portfolio_value),
     portfolio_note: `${holdings.length} holding(s), marked to market`,
-    position_value: here ? rupees(here.current_value) : 'No position',
+    position_label: here ? `Your ${d.symbol} position` : `${d.symbol} position`,
+    position_value: here ? rupees(here.current_value) : 'None',
     position_note: here
-      ? `${d.symbol} at ${rupees(here.average_price)} average`
-      : `You do not hold ${d.symbol}`,
+      ? `${here.quantity} share(s), bought at ${rupees(here.average_price)} average`
+      : `Not held in this portfolio`,
     quality_note: missingSources
       ? `${missingSources} of 3 sources unavailable`
       : 'All three sources available',
