@@ -1,5 +1,5 @@
 {
-  "investigation_id": "CASE-DCC846",
+  "investigation_id": "CASE-73B656",
   "symbol": "RELIANCE",
   "company_name": "Reliance Industries",
   "market_data": {
@@ -16,24 +16,29 @@
   },
   "signals": {
     "price_signal": {
-      "signal": "UNAVAILABLE",
-      "confidence": 0.0,
+      "signal": "BULLISH",
+      "confidence": 0.5,
       "reasons": [
-        "Agent unavailable: agent not implemented yet"
+        "Momentum +0.18 >= 0.10 (strong uptrend, +0.50)",
+        "Session move +2.29% (+0.20)",
+        "RSI 71.2 >= 70 (overbought, caution against chasing, -0.20)",
+        "Price score +0.50 -> BULLISH at confidence 0.50"
       ]
     },
     "volume_signal": {
-      "signal": "UNAVAILABLE",
-      "confidence": 0.0,
+      "signal": "BULLISH",
+      "confidence": 0.5,
       "reasons": [
-        "Agent unavailable: agent not implemented yet"
+        "Volume 8,200,000 vs 30-day average 4,100,000 = 2.0x",
+        "2.0x >= 1.5x on a rising price confirms the move (+0.50) -> BULLISH at confidence 0.50"
       ]
     },
     "sentiment_signal": {
-      "signal": "UNAVAILABLE",
-      "confidence": 0.0,
+      "signal": "BULLISH",
+      "confidence": 0.6,
       "reasons": [
-        "Agent unavailable: agent not implemented yet"
+        "5 headline(s): 3 positive, 2 negative, net lexicon score +6 -> BULLISH at confidence 0.60",
+        "Strongest signal (+4): \"Reliance Industries hits fresh 52-week high as retail arm posts record festive quarter\""
       ]
     }
   },
@@ -41,25 +46,32 @@
     {
       "agent_name": "market_detective",
       "symbol": "RELIANCE",
-      "signal": "UNAVAILABLE",
-      "confidence": 0.0,
+      "signal": "BULLISH",
+      "confidence": 0.8,
       "reasons": [
-        "Agent unavailable: agent not implemented yet"
+        "PRICE: Momentum +0.18 >= 0.10 (strong uptrend, +0.50)",
+        "PRICE: Session move +2.29% (+0.20)",
+        "PRICE: RSI 71.2 >= 70 (overbought, caution against chasing, -0.20)",
+        "PRICE: Price score +0.50 -> BULLISH at confidence 0.50",
+        "VOLUME: Volume 8,200,000 vs 30-day average 4,100,000 = 2.0x",
+        "VOLUME: 2.0x >= 1.5x on a rising price confirms the move (+0.50) -> BULLISH at confidence 0.50",
+        "Combined price BULLISH@0.50 with volume BULLISH@0.50 -> BULLISH at confidence 0.80"
       ],
       "evidence": [],
-      "status": "FAILED",
+      "status": "COMPLETE",
       "latency_ms": 0
     },
     {
       "agent_name": "news_detective",
       "symbol": "RELIANCE",
-      "signal": "UNAVAILABLE",
-      "confidence": 0.0,
+      "signal": "BULLISH",
+      "confidence": 0.6,
       "reasons": [
-        "Agent unavailable: agent not implemented yet"
+        "5 headline(s): 3 positive, 2 negative, net lexicon score +6 -> BULLISH at confidence 0.60",
+        "Strongest signal (+4): \"Reliance Industries hits fresh 52-week high as retail arm posts record festive quarter\""
       ],
       "evidence": [],
-      "status": "FAILED",
+      "status": "COMPLETE",
       "latency_ms": 0
     },
     {
@@ -80,13 +92,19 @@
   "bull_case": null,
   "bear_case": null,
   "judge_output": {
-    "verdict": "INSUFFICIENT_DATA",
-    "confidence": 0.0,
-    "summary": "Insufficient Data for a conservative investor: 0 bullish and 0 bearish of 0 reporting agents.",
-    "key_reasons": [],
+    "verdict": "CAUTION",
+    "confidence": 0.433,
+    "summary": "Caution for a conservative investor: 2 bullish and 0 bearish of 2 reporting agents.",
+    "key_reasons": [
+      "PRICE: Momentum +0.18 >= 0.10 (strong uptrend, +0.50)",
+      "PRICE: Session move +2.29% (+0.20)",
+      "PRICE: RSI 71.2 >= 70 (overbought, caution against chasing, -0.20)",
+      "PRICE: Price score +0.50 -> BULLISH at confidence 0.50",
+      "VOLUME: Volume 8,200,000 vs 30-day average 4,100,000 = 2.0x"
+    ],
     "key_risks": [],
     "selected_evidence": [],
-    "agent_agreement": 0,
+    "agent_agreement": 2,
     "agent_conflict": false
   },
   "personalization": {
@@ -94,7 +112,7 @@
     "risk_score": 25,
     "investment_horizon": "LONG_TERM",
     "stock_exposure": 0.3,
-    "personalized_reason": "Every agent failed, so no view can be justified. We report this rather than presenting an unsupported recommendation. Confidence reduced: market_detective, news_detective, filing_detective unavailable."
+    "personalized_reason": "Downgraded POSITIVE to CAUTION: 2 of 2 available agents are bullish, but your largest holding is 30% of the portfolio, above the 25% conservative ceiling. An aggressive profile would return POSITIVE here. Confidence reduced: filing_detective unavailable."
   },
   "portfolio": {
     "portfolio_value": 500000.0,
@@ -143,20 +161,18 @@
   "metrics": {
     "total_latency_ms": 0,
     "agent_latency_ms": 0,
-    "signal_confidence": 0.0,
+    "signal_confidence": 0.7,
     "evidence_coverage": 0.0,
     "concentration_score": 30.0,
-    "agents_complete": 0,
-    "agents_failed": 3
+    "agents_complete": 2,
+    "agents_failed": 1
   },
   "data_quality": {
-    "market_data": "UNAVAILABLE",
-    "news_data": "UNAVAILABLE",
+    "market_data": "AVAILABLE",
+    "news_data": "AVAILABLE",
     "filing_data": "UNAVAILABLE",
-    "overall_quality": "POOR",
+    "overall_quality": "DEGRADED",
     "warnings": [
-      "market_detective unavailable; confidence reduced.",
-      "news_detective unavailable; confidence reduced.",
       "filing_detective unavailable; confidence reduced."
     ]
   }

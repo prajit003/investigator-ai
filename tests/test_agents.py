@@ -47,10 +47,29 @@ def test_signals_match_the_story():
     print("  PASS  market signals match the rehearsed demo narrative")
 
 
+def test_price_and_volume_are_independent():
+    """PS-01 requires three INDEPENDENT dimensions. If price and volume ever
+    return the same object again, that is one dimension counted twice."""
+    from contracts import MarketData
+    from agents.market_agent import price_signal, volume_signal
+    for sym in store.symbols():
+        m = store.snapshot(sym)
+        assert price_signal(m).model_dump() != volume_signal(m).model_dump(), (
+            f"{sym}: price and volume signals are identical — not independent")
+    # and they must be able to disagree, not merely differ in confidence
+    trend_no_volume = MarketData(symbol="X", momentum=0.20, price_change_percent=2.0,
+                                 rsi=60, volume=100, average_volume=100)
+    assert price_signal(trend_no_volume).signal == "BULLISH"
+    assert volume_signal(trend_no_volume).signal == "NEUTRAL", (
+        "volume must be able to withhold confirmation from a strong price trend")
+    print("  PASS  price and volume are genuinely independent dimensions")
+
+
 if __name__ == "__main__":
     print("agent tests")
     test_every_symbol_produces_a_signal()
     test_confidence_is_explained()
     test_missing_data_degrades_not_neutral()
     test_signals_match_the_story()
+    test_price_and_volume_are_independent()
     print("\nALL AGENT TESTS PASSED")
