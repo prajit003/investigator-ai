@@ -586,4 +586,6 @@ git push
 
 Once this is pushed, don't change variable names casually.
 
-Next, we should build the project in the fastest possible order: first the shared Python data models → then the agents → RAG → risk → backend → frontend integration. That way all five people can code simultaneously without waiting for each other.
+Next, we should build the project in the fastest possible order: first the shared Python data models → then the agents → RAG → risk → backend → frontend integration. That way all five people can code simultaneously without waiting for each other.git add .
+git commit -m "Add shared architecture and variable contract"
+git push

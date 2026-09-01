@@ -1,16 +1,24 @@
 from pathlib import Path
 import json
-import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from models import SynthesisOutput, UserProfile, MarketSnapshot
+from models import SynthesisOutput, UserProfile
 
+
+# --------------------------------------------------
+# Paths
+# --------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent
 FIXTURES_DIR = BASE_DIR / "fixtures"
+
+
+# --------------------------------------------------
+# FastAPI application
+# --------------------------------------------------
 
 app = FastAPI(
     title="INVESTIGATOR API",
@@ -18,7 +26,10 @@ app = FastAPI(
 )
 
 
-# Allow the frontend to communicate with the backend.
+# --------------------------------------------------
+# CORS
+# --------------------------------------------------
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,13 +39,20 @@ app.add_middleware(
 )
 
 
-# Make fixtures available as static files.
+# --------------------------------------------------
+# Serve fixtures as static files
+# --------------------------------------------------
+
 app.mount(
     "/fixtures",
     StaticFiles(directory=FIXTURES_DIR),
     name="fixtures"
 )
 
+
+# --------------------------------------------------
+# ROUTE 1 — Analyze
+# --------------------------------------------------
 
 @app.get(
     "/api/analyze",
@@ -44,29 +62,40 @@ async def analyze(
     ticker: str,
     user_id: str
 ):
-    fixture_path = (
-        FIXTURES_DIR /
-        "synthesis_example.json"
-    )
+    fixture_path = FIXTURES_DIR / "synthesis_example.json"
 
-    with open(
-        fixture_path,
-        "r",
-        encoding="utf-8"
-    ) as file:
-        data = json.load(file)
+    try:
+        with open(
+            fixture_path,
+            "r",
+            encoding="utf-8"
+        ) as file:
+            data = json.load(file)
 
-    # Validate BEFORE returning.
-    result = SynthesisOutput.model_validate(data)
+        # Validate the fixture before returning it.
+        result = SynthesisOutput.model_validate(data)
 
-    return result
+        return result
 
+    except Exception as exc:
+        # The fixture should always be valid.
+        # This prevents an unexpected 500 during development.
+        print(f"Analyze error: {exc}")
+
+        # Re-raise for now so we notice a broken fixture.
+        raise
+
+
+# --------------------------------------------------
+# ROUTE 2 — Tickers
+# --------------------------------------------------
 
 @app.get(
     "/api/tickers",
     response_model=list[str]
 )
 async def get_tickers():
+
     return [
         "RELIANCE",
         "TCS",
@@ -74,16 +103,17 @@ async def get_tickers():
     ]
 
 
+# --------------------------------------------------
+# ROUTE 3 — Profiles
+# --------------------------------------------------
+
 @app.get(
     "/api/profiles",
     response_model=list[UserProfile]
 )
 async def get_profiles():
 
-    profiles_path = (
-        FIXTURES_DIR /
-        "profiles.json"
-    )
+    profiles_path = FIXTURES_DIR / "profiles.json"
 
     with open(
         profiles_path,

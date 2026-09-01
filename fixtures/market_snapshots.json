@@ -1,0 +1,35 @@
+{
+  "RELIANCE": {
+    "ticker": "RELIANCE",
+    "current_price": 2850.0,
+    "price_change_percent": -3.8,
+    "volume": 3200000,
+    "average_volume": 1000000,
+    "rsi": 31.0,
+    "momentum": -0.18,
+    "volatility": 0.27,
+    "sentiment_score": -0.41
+  },
+  "TCS": {
+    "ticker": "TCS",
+    "current_price": 4120.0,
+    "price_change_percent": 2.1,
+    "volume": 1400000,
+    "average_volume": 1100000,
+    "rsi": 61.0,
+    "momentum": 0.14,
+    "volatility": 0.18,
+    "sentiment_score": 0.32
+  },
+  "INFY": {
+    "ticker": "INFY",
+    "current_price": 1780.0,
+    "price_change_percent": -1.7,
+    "volume": 1800000,
+    "average_volume": 1200000,
+    "rsi": 42.0,
+    "momentum": -0.08,
+    "volatility": 0.21,
+    "sentiment_score": -0.12
+  }
+}

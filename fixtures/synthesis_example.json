@@ -1,0 +1,63 @@
+{
+  "investigation_id": "CASE-247",
+  "ticker": "RELIANCE",
+  "recommendation": "CAUTION",
+  "confidence": 0.78,
+  "summary": "Market signals are mixed. Negative momentum and unusual volume increase short-term risk, while fundamental evidence remains comparatively stable.",
+  "agent_outputs": [
+    {
+      "agent_name": "technical",
+      "ticker": "RELIANCE",
+      "status": "OK",
+      "signal": "BEARISH",
+      "confidence": 0.84,
+      "reasoning": "Negative momentum and weak RSI indicate short-term technical weakness.",
+      "citations": []
+    },
+    {
+      "agent_name": "volume",
+      "ticker": "RELIANCE",
+      "status": "OK",
+      "signal": "BEARISH",
+      "confidence": 0.91,
+      "reasoning": "Trading volume is significantly above its recent average.",
+      "citations": []
+    },
+    {
+      "agent_name": "sentiment",
+      "ticker": "RELIANCE",
+      "status": "OK",
+      "signal": "BEARISH",
+      "confidence": 0.73,
+      "reasoning": "Recent market sentiment is moderately negative.",
+      "citations": [
+        {
+          "source_name": "Market News Dataset",
+          "source_type": "NEWS",
+          "source_date": "2026-09-01",
+          "page": null,
+          "section": "Market Sentiment",
+          "text": "Recent coverage indicates increased uncertainty around the stock.",
+          "relevance_score": 0.88
+        }
+      ]
+    },
+    {
+      "agent_name": "fundamental",
+      "ticker": "RELIANCE",
+      "status": "OK",
+      "signal": "NEUTRAL",
+      "confidence": 0.67,
+      "reasoning": "Available fundamental indicators do not show a strong directional signal.",
+      "citations": []
+    }
+  ],
+  "citations": [],
+  "metrics": {
+    "total_latency_ms": 0,
+    "avg_confidence": 0.7875,
+    "concentration_score": 24,
+    "agents_ok": 4,
+    "agents_failed": 0
+  }
+}

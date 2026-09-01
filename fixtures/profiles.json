@@ -1,0 +1,26 @@
+[
+  {
+    "user_id": "u1",
+    "name": "Alex",
+    "risk_profile": "CONSERVATIVE",
+    "investment_horizon": "LONG_TERM",
+    "portfolio_value": 500000,
+    "max_holding_pct": 24
+  },
+  {
+    "user_id": "u2",
+    "name": "Sam",
+    "risk_profile": "BALANCED",
+    "investment_horizon": "MEDIUM_TERM",
+    "portfolio_value": 500000,
+    "max_holding_pct": 20
+  },
+  {
+    "user_id": "u3",
+    "name": "Jordan",
+    "risk_profile": "AGGRESSIVE",
+    "investment_horizon": "SHORT_TERM",
+    "portfolio_value": 500000,
+    "max_holding_pct": 35
+  }
+]
