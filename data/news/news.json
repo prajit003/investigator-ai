@@ -1,0 +1,22 @@
+[
+  { "symbol": "RELIANCE", "headlines": [
+    "Reliance Industries hits fresh 52-week high as retail arm posts record festive quarter",
+    "Brokerages raise Reliance target price on strong Jio subscriber additions",
+    "Reliance new energy capex seen weighing on near-term free cash flow, says analyst note",
+    "Reliance retail expansion drives volume growth across tier-2 cities",
+    "Petrochemical margin weakness persists into second half, Reliance flags in filing"
+  ]},
+  { "symbol": "TCS", "headlines": [
+    "TCS wins multi-year deal with European bank, order book at eight-quarter high",
+    "TCS attrition falls for fourth straight quarter, margins expand",
+    "IT sector outlook improves as discretionary spending recovers, TCS best placed",
+    "TCS announces record dividend payout after strong free cash flow conversion"
+  ]},
+  { "symbol": "ZOMATO", "headlines": [
+    "Zomato shares slide as monthly transacting users decline for first time since listing",
+    "GST demand notice worth 803 crore rupees weighs on Zomato sentiment",
+    "Quick commerce competition intensifies, Zomato margins under pressure",
+    "Zomato average order value rises even as user base shrinks",
+    "Analysts cut Zomato estimates citing delayed path to profitability"
+  ]}
+]
