@@ -38,8 +38,15 @@ def _concentration(portfolio: Portfolio | None) -> float:
 
 def judge(agents: List[AgentOutput], user: UserProfile,
           portfolio: Portfolio | None = None) -> Tuple[JudgeOutput, Personalization]:
-    live = [a for a in agents if a.status != "FAILED"]
-    unavailable = [a.agent_name for a in agents if a.status == "FAILED"]
+    # "Reporting" means the agent produced an actual view. An agent that ran but
+    # found no data returns signal="UNAVAILABLE"; counting it as a reporting
+    # agent turns "we know nothing" into CAUTION, which reads as a judgement the
+    # evidence does not support. Missing is missing, not neutral.
+    def _reporting(a: AgentOutput) -> bool:
+        return a.status != "FAILED" and a.signal != "UNAVAILABLE"
+
+    live = [a for a in agents if _reporting(a)]
+    unavailable = [a.agent_name for a in agents if not _reporting(a)]
     conservative = user.risk_profile == "CONSERVATIVE"
 
     # Conservative investors do not get to act on high confidence. Cap first,
@@ -60,8 +67,10 @@ def judge(agents: List[AgentOutput], user: UserProfile,
 
     if not live:
         verdict = "INSUFFICIENT_DATA"
-        reason = ("Every agent failed, so no view can be justified. We report this "
-                  "rather than presenting an unsupported recommendation.")
+        reason = ("No agent produced a usable view — every agent either failed or "
+                  "found no data for this symbol — so no recommendation can be "
+                  "justified. We report that rather than presenting an "
+                  "unsupported one.")
     elif conservative:
         strong_bear = any(c > STRONG_BEAR_CONFIDENCE for _, c in bears)
         if len(bulls) >= CONSERVATIVE_MIN_BULLISH and not strong_bear:
@@ -113,7 +122,10 @@ def judge(agents: List[AgentOutput], user: UserProfile,
         verdict=verdict,
         confidence=confidence,
         summary=_summary(verdict, user, live, bulls, bears, conflict),
-        key_reasons=[r for a in live for r in a.reasons][:5],
+        # Fall back to every agent's reasons when nothing reported, so an
+        # INSUFFICIENT_DATA verdict still tells the user WHY it is empty.
+        key_reasons=([r for a in live for r in a.reasons]
+                     or [r for a in agents for r in a.reasons])[:5],
         key_risks=[r for a, _ in bears for r in a.reasons][:3],
         selected_evidence=[e for a in live for e in a.evidence][:3],
         agent_agreement=max(len(bulls), len(bears)),

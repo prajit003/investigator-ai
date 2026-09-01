@@ -4,8 +4,22 @@
     {
       "name": "aureon",
       "runtimeExecutable": ".venv/bin/uvicorn",
-      "runtimeArgs": ["main:app", "--port", "8077"],
+      "runtimeArgs": [
+        "main:app",
+        "--port",
+        "8077"
+      ],
       "port": 8077
+    },
+    {
+      "name": "aureon-verify",
+      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeArgs": [
+        "main:app",
+        "--port",
+        "8088"
+      ],
+      "port": 8088
     }
   ]
 }
