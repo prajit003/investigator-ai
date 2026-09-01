@@ -1,98 +1,56 @@
-from pathlib import Path
-import json
-import os
+"""
+INVESTIGATOR backend. Three routes, one response shape.
 
-from fastapi import FastAPI
+The frontend consumes `investigation_result` (docs/ARCHITECTURE.md §12) and
+nothing else. Adding a fourth route means adding a second integration point;
+don't.
+"""
+import pathlib
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from models import SynthesisOutput, UserProfile, MarketSnapshot
+import store
+from contracts import InvestigationResult
+from orchestrator import investigate
 
+BASE = pathlib.Path(__file__).resolve().parent
+FIXTURES = BASE / "fixtures"
 
-BASE_DIR = Path(__file__).resolve().parent
-FIXTURES_DIR = BASE_DIR / "fixtures"
+app = FastAPI(title="INVESTIGATOR API", version="1.0.0")
 
-app = FastAPI(
-    title="INVESTIGATOR API",
-    version="1.0.0"
-)
-
-
-# Allow the frontend to communicate with the backend.
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    CORSMiddleware, allow_origins=["*"], allow_credentials=True,
+    allow_methods=["*"], allow_headers=["*"],
 )
 
-
-# Make fixtures available as static files.
-app.mount(
-    "/fixtures",
-    StaticFiles(directory=FIXTURES_DIR),
-    name="fixtures"
-)
+# Serve fixtures so the frontend can develop against them before the API is live.
+FIXTURES.mkdir(exist_ok=True)
+app.mount("/fixtures", StaticFiles(directory=FIXTURES), name="fixtures")
 
 
-@app.get(
-    "/api/analyze",
-    response_model=SynthesisOutput
-)
-async def analyze(
-    ticker: str,
-    user_id: str
-):
-    fixture_path = (
-        FIXTURES_DIR /
-        "synthesis_example.json"
-    )
-
-    with open(
-        fixture_path,
-        "r",
-        encoding="utf-8"
-    ) as file:
-        data = json.load(file)
-
-    # Validate BEFORE returning.
-    result = SynthesisOutput.model_validate(data)
-
-    return result
+@app.get("/api/symbols", response_model=list[str])
+async def get_symbols():
+    """Only symbols we have BOTH market data and filings for — never offer a
+    symbol in the UI that would return empty evidence."""
+    return store.symbols()
 
 
-@app.get(
-    "/api/tickers",
-    response_model=list[str]
-)
-async def get_tickers():
-    return [
-        "RELIANCE",
-        "TCS",
-        "INFY"
-    ]
-
-
-@app.get(
-    "/api/profiles",
-    response_model=list[UserProfile]
-)
+@app.get("/api/profiles")
 async def get_profiles():
+    return [{"user": u.model_dump(), "portfolio": p.model_dump()}
+            for u, p in store.profiles().values()]
 
-    profiles_path = (
-        FIXTURES_DIR /
-        "profiles.json"
-    )
 
-    with open(
-        profiles_path,
-        "r",
-        encoding="utf-8"
-    ) as file:
-        data = json.load(file)
-
-    return [
-        UserProfile.model_validate(profile)
-        for profile in data
-    ]
+@app.get("/api/analyze", response_model=InvestigationResult)
+async def analyze(symbol: str, user_id: str):
+    """
+    The whole pipeline. This must never return a 500 for a data problem —
+    a dead agent is a DEGRADED result, not an error. Only an unknown symbol
+    or user is a client error.
+    """
+    try:
+        return await investigate(symbol, user_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))

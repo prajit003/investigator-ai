@@ -10,7 +10,20 @@ Everything is a pydantic model with defaults, so a partially-built object is
 still valid and a missing agent degrades instead of raising.
 """
 from typing import List, Literal, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class Strict(BaseModel):
+    """
+    Base for every contract object.
+
+    `extra="forbid"` is the point: a field name that drifts from
+    docs/ARCHITECTURE.md raises immediately instead of being silently dropped.
+    Naming drift is the failure mode this project cannot afford, so it is a
+    hard error, not a convention. `python3 validate.py` lists the banned
+    spellings and their replacements.
+    """
+    model_config = ConfigDict(extra="forbid")
 
 # ---- allowed values (docs/ARCHITECTURE.md) ----
 RiskProfile = Literal["CONSERVATIVE", "BALANCED", "AGGRESSIVE"]
@@ -27,7 +40,7 @@ SourceType   = Literal["FILING", "TRANSCRIPT", "NEWS", "SHAREHOLDER_LETTER"]
 
 
 # ---- 1. user ----
-class UserProfile(BaseModel):
+class UserProfile(Strict):
     user_id: str
     user_name: str = ""
     risk_profile: RiskProfile = "BALANCED"
@@ -36,7 +49,7 @@ class UserProfile(BaseModel):
 
 
 # ---- 3. market data ----
-class MarketData(BaseModel):
+class MarketData(Strict):
     symbol: str
     company_name: str = ""
     current_price: float = 0.0
@@ -50,20 +63,20 @@ class MarketData(BaseModel):
 
 
 # ---- 4. the three core signals ----
-class Signal(BaseModel):
+class Signal(Strict):
     signal: SignalValue = "NEUTRAL"
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     reasons: List[str] = []
 
 
-class Signals(BaseModel):
+class Signals(Strict):
     price_signal: Signal = Signal()
     volume_signal: Signal = Signal()
     sentiment_signal: Signal = Signal()
 
 
 # ---- 6. RAG ----
-class Evidence(BaseModel):
+class Evidence(Strict):
     """Built by rag.build_evidence. `text` is copied verbatim from the corpus."""
     source_name: str
     source_type: SourceType = "FILING"
@@ -75,7 +88,7 @@ class Evidence(BaseModel):
 
 
 # ---- 5. agent output ----
-class AgentOutput(BaseModel):
+class AgentOutput(Strict):
     agent_name: AgentName
     symbol: str = ""
     signal: SignalValue = "NEUTRAL"
@@ -94,7 +107,7 @@ class AgentOutput(BaseModel):
 
 
 # ---- 7. bull / bear (CUT for the demo; kept so the shape exists) ----
-class Case(BaseModel):
+class Case(Strict):
     argument: str = ""
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     reasons: List[str] = []
@@ -102,7 +115,7 @@ class Case(BaseModel):
 
 
 # ---- 8. judge ----
-class JudgeOutput(BaseModel):
+class JudgeOutput(Strict):
     verdict: Verdict = "INSUFFICIENT_DATA"
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     summary: str = ""
@@ -114,14 +127,14 @@ class JudgeOutput(BaseModel):
 
 
 # ---- 9. portfolio ----
-class Holding(BaseModel):
+class Holding(Strict):
     symbol: str
     quantity: float = 0.0
     average_price: float = 0.0
     current_value: float = 0.0
 
 
-class Portfolio(BaseModel):
+class Portfolio(Strict):
     portfolio_value: float = 0.0
     holdings: List[Holding] = []
     sector_exposure: dict = {}
@@ -130,7 +143,7 @@ class Portfolio(BaseModel):
 
 
 # ---- 10. personalization ----
-class Personalization(BaseModel):
+class Personalization(Strict):
     risk_profile: RiskProfile = "BALANCED"
     risk_score: int = 50
     investment_horizon: Horizon = "LONG_TERM"
@@ -139,7 +152,7 @@ class Personalization(BaseModel):
 
 
 # ---- 11. what-if (CUT for the demo) ----
-class Scenario(BaseModel):
+class Scenario(Strict):
     scenario: str = ""
     scenario_change_percent: float = 0.0
     stock_impact: float = 0.0
@@ -148,7 +161,7 @@ class Scenario(BaseModel):
 
 
 # ---- 13. metrics ----
-class Metrics(BaseModel):
+class Metrics(Strict):
     total_latency_ms: int = 0
     agent_latency_ms: int = 0
     signal_confidence: float = 0.0
@@ -161,7 +174,7 @@ class Metrics(BaseModel):
 
 
 # ---- 14. data quality ----
-class DataQuality(BaseModel):
+class DataQuality(Strict):
     market_data: Availability = "AVAILABLE"
     news_data: Availability = "AVAILABLE"
     filing_data: Availability = "AVAILABLE"
@@ -170,7 +183,7 @@ class DataQuality(BaseModel):
 
 
 # ---- 12. THE MASTER OBJECT — this is what the frontend renders ----
-class InvestigationResult(BaseModel):
+class InvestigationResult(Strict):
     investigation_id: str = ""
     symbol: str = ""
     company_name: str = ""
