@@ -4,8 +4,16 @@
     {
       "name": "aureon",
       "runtimeExecutable": ".venv/bin/uvicorn",
-      "runtimeArgs": ["main:app", "--port", "8077"],
-      "port": 8077
+      "runtimeArgs": ["main:app", "--port", "3000"],
+      "port": 3000,
+      "env": { "DATA_MODE": "live" }
+    },
+    {
+      "name": "aureon-offline",
+      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeArgs": ["main:app", "--port", "3001"],
+      "port": 3001,
+      "env": { "DATA_MODE": "fixtures" }
     }
   ]
 }

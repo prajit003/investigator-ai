@@ -1,7 +1,17 @@
-"""Loads the on-disk fixtures once and validates them. Import this, never open() a path."""
-import json, pathlib
+"""
+The data router. Import this, never open() a path.
+
+It used to be a fixture loader; it is now a router with the fixture loader still
+inside it as the bottom rung. Callers ask for a snapshot and get whatever the
+current DATA_MODE can honestly provide — live, cached, or hand-written — and a
+list of warnings naming every step down that ladder.
+"""
+import json
+import pathlib
 from functools import lru_cache
 from typing import Optional
+
+import feeds
 from contracts import MarketData, Portfolio, UserProfile
 
 BASE = pathlib.Path(__file__).resolve().parent
@@ -16,6 +26,7 @@ def _read(rel: str):
 
 @lru_cache(maxsize=1)
 def market() -> dict[str, MarketData]:
+    """The hand-written fixture set. Not the live feed — see snapshot()."""
     return {m["symbol"].upper(): MarketData.model_validate(m)
             for m in _read("data/market/market.json")}
 
@@ -47,10 +58,17 @@ def profiles() -> dict[str, tuple[UserProfile, Portfolio]]:
       B) {"u1": {...user fields..., "portfolio": {...}}, ...}
     """
     raw = _read("data/profiles.json")
-    rows = list(raw.values()) if isinstance(raw, dict) else list(raw)
+    if isinstance(raw, dict):
+        # Skip "_comment" and friends: a data file is allowed to explain itself,
+        # and an underscore key is documentation, not a user.
+        rows = [v for k, v in raw.items() if not str(k).startswith("_")]
+    else:
+        rows = list(raw)
 
     out = {}
     for row in rows:
+        if not isinstance(row, dict):
+            continue
         if "user" in row:                       # shape A
             user_fields, pf = dict(row["user"]), row.get("portfolio") or {}
         else:                                   # shape B — portfolio nested in the user
@@ -62,10 +80,39 @@ def profiles() -> dict[str, tuple[UserProfile, Portfolio]]:
 
 
 def symbols() -> list[str]:
-    """The symbol list the UI offers. Only symbols we have BOTH price and filings for."""
+    """
+    The symbol list the UI offers.
+
+    Fixture mode keeps the original rule — only symbols we have BOTH a price and
+    filings for, so the UI never offers one that returns empty evidence. With a
+    live feed both are fetchable on demand, so the watchlist is the universe.
+    """
     from rag.ingest import available_symbols
-    return sorted(set(market()) & set(available_symbols()))
+
+    if feeds.offline():
+        return sorted(set(market()) & set(available_symbols()))
+
+    from feeds.symbols import watchlist
+    live = watchlist()
+    return live or sorted(set(market()) & set(available_symbols()))
 
 
-def snapshot(symbol: str) -> Optional[MarketData]:
+def fixture_snapshot(symbol: str) -> Optional[MarketData]:
+    """The hand-written snapshot only. feeds.quotes calls this as its last rung."""
     return market().get(symbol.upper())
+
+
+async def snapshot_with_warnings(symbol: str) -> tuple[Optional[MarketData], list[str]]:
+    """
+    The live path. Returns (market_data, warnings); never raises.
+
+    In fixtures mode this resolves to exactly the old behaviour, which is what
+    keeps validate.py and CI deterministic and offline.
+    """
+    from feeds.quotes import quote_with_warnings
+    return await quote_with_warnings(symbol)
+
+
+async def snapshot(symbol: str) -> Optional[MarketData]:
+    md, _ = await snapshot_with_warnings(symbol)
+    return md

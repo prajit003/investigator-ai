@@ -39,6 +39,23 @@ def available_symbols() -> list[str]:
     return sorted({d["symbol"] for d in load_documents()})
 
 
+async def live_documents_for(symbol: str) -> tuple[list[dict], list[str]]:
+    """
+    The corpus the filing agent should actually read: live BSE filings first,
+    with the hand-written fixture chunks appended.
+
+    Live wins on ordering, not by exclusion — the fixture corpus is the reason
+    the demo still has something to cite when BSE is unreachable, and both carry
+    real chunk_ids that the grounding guard can verify.
+    """
+    from feeds.filings import corpus_with_warnings
+
+    live, warnings = await corpus_with_warnings(symbol)
+    fixture = documents_for(symbol)
+    seen = {c["chunk_id"] for c in live}
+    return live + [c for c in fixture if c["chunk_id"] not in seen], warnings
+
+
 def filing_data_status(symbol: str) -> str:
     """Feeds `data_quality.filing_data` (ARCHITECTURE.md §14)."""
     return "AVAILABLE" if documents_for(symbol) else "UNAVAILABLE"

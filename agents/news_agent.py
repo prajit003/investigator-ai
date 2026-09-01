@@ -30,6 +30,13 @@ NEGATIVE = {
     "losses": 2, "notice": 1, "demand": 1, "probe": 2, "delayed": 2, "delay": 2,
     "downgrade": 2, "concern": 1, "concerns": 1, "shrinks": 2, "weighing": 1,
     "weighs": 1, "intensifies": 1, "competition": 1, "persists": 1,
+    # Added after reading a live Google News sample for the watchlist: this is
+    # the vocabulary the Indian financial press actually uses, and without it a
+    # clearly bearish day scores near zero.
+    "drag": 2, "drags": 2, "deepen": 2, "deepens": 2, "plunge": 3, "plunges": 3,
+    "crash": 3, "slump": 3, "slumps": 3, "tumble": 3, "tumbles": 3, "sink": 2,
+    "sinks": 2, "miss": 2, "missed": 2, "misses": 2, "lag": 1, "lags": 1,
+    "selloff": 3, "downside": 2, "hit": 1, "halts": 2, "penalty": 3, "fine": 2,
 }
 _WORD = re.compile(r"[a-z]+")
 
@@ -47,8 +54,33 @@ def _score_headline(h: str) -> int:
     return sum(POSITIVE.get(w, 0) for w in words) - sum(NEGATIVE.get(w, 0) for w in words)
 
 
+async def _headlines(symbol: str) -> tuple[list[str], list[str]]:
+    """
+    Live headlines, falling back to the fixture file.
+
+    The agent fetches its own data rather than having it passed in, because the
+    agent signature `run(symbol, market_data)` is the contract every other agent
+    keeps and safety.run_agent_safely already wraps this call in a 12s timeout
+    with exception capture — a slow news feed degrades this one dimension and
+    cannot reach the user as an error.
+    """
+    from feeds.news import headlines_with_warnings
+
+    items, _ = await headlines_with_warnings(symbol)
+    if items:
+        # Attribution is part of the evidence: "X falls 5%" from a wire service
+        # this morning is not the same claim as the same words from anywhere.
+        labelled = [f"{i['title']}"
+                    + (f" ({i['publisher']}, {i['published']})"
+                       if i.get("publisher") and i.get("published") else "")
+                    for i in items]
+        return [i["title"] for i in items], labelled
+    legacy = _news().get(symbol.upper(), [])
+    return legacy, legacy
+
+
 async def run(symbol: str, market_data: MarketData | None = None) -> AgentOutput:
-    headlines = _news().get(symbol.upper(), [])
+    headlines, labelled = await _headlines(symbol)
 
     # DEGRADED, not neutral: no coverage is missing information, and saying
     # "neutral" would let an absent signal vote in the synthesis.
@@ -75,7 +107,11 @@ async def run(symbol: str, market_data: MarketData | None = None) -> AgentOutput
     ]
     strongest = max(scores, key=lambda p: abs(p[0]))
     if strongest[0]:
-        reasons.append(f"Strongest signal ({strongest[0]:+d}): \"{strongest[1]}\"")
+        # Quote the ATTRIBUTED form so a judge can see which outlet said it and
+        # when, not just the words.
+        attributed = next((l for h, l in zip(headlines, labelled) if h == strongest[1]),
+                          strongest[1])
+        reasons.append(f"Strongest signal ({strongest[0]:+d}): \"{attributed}\"")
 
     return AgentOutput(
         agent_name="news_detective", symbol=symbol, signal=signal,

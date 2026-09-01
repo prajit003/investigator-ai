@@ -2730,3 +2730,64 @@ html.theme-transitioning *::after {
 [data-theme="dark"] .sidebar__user-avatar {
   background: linear-gradient(135deg, var(--blue-muted), var(--blue));
 }
+
+/* ── live data layer ──────────────────────────────────────────────────
+   Feed warnings and evidence links. Every fallback the backend took is
+   printed here, so a degraded answer is visibly degraded rather than
+   quietly wrong. */
+.live-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.live-warning {
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border-left: 3px solid var(--amber);
+  background: var(--amber-light, rgba(245, 158, 11, 0.08));
+  color: var(--slate, #475569);
+}
+
+.evidence-link {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue, #4361EE);
+  text-decoration: none;
+}
+
+.evidence-link:hover { text-decoration: underline; }
+
+/* A dimension that did not report gets a muted card, not a green one. */
+.agent-card--slate { border-color: var(--slate-light, #94A3B8); }
+.pill--slate {
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--slate, #475569);
+}
+.pill--slate .dot { background: var(--slate-light, #94A3B8); }
+.confidence-bar__fill--slate { background: var(--slate-light, #94A3B8); }
+.text-slate-muted { color: var(--slate-light, #94A3B8); }
+
+/* Where a chart would go once there is real history to draw. Deliberately not
+   a shimmering skeleton: a placeholder that looks like loading data implies
+   data is coming in a moment, and this one may be waiting weeks. */
+.chart-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  min-height: 120px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--slate-light, #94A3B8);
+  border: 1px dashed var(--divider-light, #E8E6E1);
+  border-radius: var(--r-md, 12px);
+}
+
+.chart-placeholder--tall { min-height: 220px; font-size: 13px; }

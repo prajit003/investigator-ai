@@ -11,7 +11,7 @@ from agents.news_agent import run as news
 def test_every_symbol_produces_a_signal():
     for s in store.symbols():
         for fn, name in ((market, "market_detective"), (news, "news_detective")):
-            o = asyncio.run(fn(s, store.snapshot(s)))
+            o = asyncio.run(fn(s, store.fixture_snapshot(s)))
             assert isinstance(o, AgentOutput) and o.agent_name == name
             assert o.status == "COMPLETE", f"{name} degraded on {s}"
             assert o.reasons, f"{name} gave no reasons for {s}"
@@ -21,7 +21,7 @@ def test_every_symbol_produces_a_signal():
 def test_confidence_is_explained():
     """A judge will ask where the number came from. It must be in `reasons`."""
     for s in store.symbols():
-        o = asyncio.run(market(s, store.snapshot(s)))
+        o = asyncio.run(market(s, store.fixture_snapshot(s)))
         assert any(f"{o.confidence:.2f}" in r for r in o.reasons), (
             f"market_detective confidence {o.confidence} on {s} is not traceable to a rule")
     print("  PASS  every confidence traces to a stated rule with real numbers")
@@ -42,7 +42,7 @@ def test_signals_match_the_story():
     for sym, want in expected.items():
         if sym not in store.symbols():
             continue
-        got = asyncio.run(market(sym, store.snapshot(sym))).signal
+        got = asyncio.run(market(sym, store.fixture_snapshot(sym))).signal
         assert got == want, f"{sym} market signal is {got}, demo script expects {want}"
     print("  PASS  market signals match the rehearsed demo narrative")
 
@@ -53,7 +53,7 @@ def test_price_and_volume_are_independent():
     from contracts import MarketData
     from agents.market_agent import price_signal, volume_signal
     for sym in store.symbols():
-        m = store.snapshot(sym)
+        m = store.fixture_snapshot(sym)
         assert price_signal(m).model_dump() != volume_signal(m).model_dump(), (
             f"{sym}: price and volume signals are identical — not independent")
     # and they must be able to disagree, not merely differ in confidence

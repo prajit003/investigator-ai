@@ -62,8 +62,8 @@
     <div class="sidebar__user">
       <div class="sidebar__user-avatar">P</div>
       <div class="sidebar__user-info">
-        <span class="sidebar__user-name" data-priya="Priya Sharma" data-arjun="Arjun Mehta">Priya Sharma</span>
-        <span class="sidebar__user-role" data-priya="Conservative" data-arjun="Aggressive">Conservative</span>
+        <span class="sidebar__user-name" data-bind="user_name">—</span>
+        <span class="sidebar__user-role" data-bind="risk_profile">—</span>
       </div>
     </div>
   </aside>
@@ -80,11 +80,11 @@
 
       <div class="topbar__search">
         <svg class="topbar__search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search a company or ticker…">
+        <input type="text" placeholder="Search a company or symbol…">
       </div>
 
       <div class="topbar__actions">
-        <span class="topbar__refresh"><span class="dot"></span>&nbsp; Updated 2 min ago</span>
+        <span class="topbar__refresh" id="live-freshness"><span class="dot"></span>&nbsp; Connecting…</span>
 
         <button class="theme-toggle" id="themeToggle" data-tooltip="Toggle dark mode">
           <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -135,31 +135,29 @@
         <div class="overview__stats">
           <div class="stat-card">
             <span class="stat-card__label">Portfolio Value</span>
-            <span class="stat-card__value tabular" data-priya="₹1.42 Cr" data-arjun="₹2.18 Cr">₹1.42 Cr</span>
-            <span class="stat-card__delta stat-card__delta--up">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-              +0.87% today
+            <span class="stat-card__value tabular" data-bind="portfolio_value">—</span>
+            <span class="stat-card__delta">
+              <span data-bind="portfolio_note">—</span>
             </span>
           </div>
           <div class="stat-card">
-            <span class="stat-card__label">Today's Return</span>
-            <span class="stat-card__value tabular text-green" data-priya="+₹1,23,450" data-arjun="+₹2,87,600">+₹1,23,450</span>
-            <span class="stat-card__delta stat-card__delta--up">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-              Broad green day
+            <span class="stat-card__label" data-bind="position_label">This position</span>
+            <span class="stat-card__value tabular" data-bind="position_value">—</span>
+            <span class="stat-card__delta">
+              <span data-bind="position_note">—</span>
             </span>
           </div>
           <div class="stat-card">
             <span class="stat-card__label">Market Sentiment</span>
             <span class="stat-card__value">
-              <span class="pill pill--green"><span class="dot"></span> Cautious Optimism</span>
+              <span class="pill" data-bind="data_quality"><span class="dot"></span> —</span>
             </span>
-            <span class="stat-card__delta text-muted">Nifty 50 +0.63%</span>
+            <span class="stat-card__delta text-muted"><span data-bind="quality_note">—</span></span>
           </div>
           <div class="stat-card">
             <span class="stat-card__label">Research Sources</span>
-            <span class="stat-card__value tabular">47</span>
-            <span class="stat-card__delta text-muted">Verified · 3 agents active</span>
+            <span class="stat-card__value tabular" data-bind="evidence_count">—</span>
+            <span class="stat-card__delta text-muted"><span data-bind="agents_note">—</span></span>
           </div>
         </div>
 
@@ -174,25 +172,20 @@
               <div class="hero-card__inner">
                 <div class="hero-card__content">
                   <span class="hero-card__label">Top Recommendation</span>
-                  <h2 class="hero-card__company">Reliance Industries Ltd.</h2>
-                  <span class="hero-card__ticker">NSE: RELIANCE · Large Cap · Conglomerate</span>
+                  <h2 class="hero-card__company" data-bind="company_name">Reliance Industries Ltd.</h2>
+                  <span class="hero-card__ticker" data-bind="listing">NSE: RELIANCE</span>
 
                   <div class="hero-card__price-row">
-                    <span class="hero-card__price">₹2,987.45</span>
-                    <span class="hero-card__change text-green">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-                      +1.24%
-                    </span>
+                    <span class="hero-card__price" data-bind="price">₹2,987.45</span>
+                    <span class="hero-card__change" data-bind="change">+1.24%</span>
                   </div>
 
                   <div class="hero-card__signals">
-                    <span class="pill pill--green" data-priya="BUY" data-arjun="STRONG BUY">BUY</span>
-                    <span class="pill pill--blue">82% Confidence</span>
+                    <span class="pill" data-bind="verdict">—</span>
+                    <span class="pill pill--blue" data-bind="verdict_confidence">—</span>
                   </div>
 
-                  <p class="hero-card__thesis">
-                    "Momentum remains strong, while valuation risk calls for disciplined position sizing."
-                  </p>
+                  <p class="hero-card__thesis" data-bind="summary">—</p>
 
                   <div class="hero-card__actions">
                     <button class="btn btn--primary btn--sm" data-navigate="analysis">
@@ -207,25 +200,11 @@
                 </div>
 
                 <div class="hero-card__chart">
-                  <svg viewBox="0 0 260 180" preserveAspectRatio="none">
-                    <!-- Gradient fill -->
-                    <defs>
-                      <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#4361EE" stop-opacity="0.15"/>
-                        <stop offset="100%" stop-color="#4361EE" stop-opacity="0.01"/>
-                      </linearGradient>
-                    </defs>
-                    <!-- Area fill -->
-                    <path d="M0,140 Q20,130 40,125 T80,110 T120,95 T160,80 T200,60 T240,50 L260,45 L260,180 L0,180 Z" fill="url(#chartGrad)"/>
-                    <!-- Line -->
-                    <path d="M0,140 Q20,130 40,125 T80,110 T120,95 T160,80 T200,60 T240,50 L260,45" fill="none" stroke="#4361EE" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <!-- End dot -->
-                    <circle cx="260" cy="45" r="4" fill="#4361EE"/>
-                    <circle cx="260" cy="45" r="8" fill="#4361EE" opacity="0.2"/>
-                    <!-- Grid lines -->
-                    <line x1="0" y1="60" x2="260" y2="60" stroke="#E8E6E1" stroke-width="0.5" stroke-dasharray="4 4"/>
-                    <line x1="0" y1="120" x2="260" y2="120" stroke="#E8E6E1" stroke-width="0.5" stroke-dasharray="4 4"/>
-                  </svg>
+                  <!-- The invented sparkline that used to live here has been
+                       removed. A price chart needs daily closes, which the
+                       system accumulates one session at a time; until it has
+                       them it says so instead of drawing a shape. -->
+                  <div class="chart-placeholder" data-bind="history_note">—</div>
                 </div>
               </div>
             </div>
@@ -233,7 +212,8 @@
             <!-- AI Signal Summary -->
             <div>
               <h3 class="section-title">AI Signal Summary</h3>
-              <div class="agent-cards">
+              <div id="live-warnings" class="live-warnings" style="display:none"></div>
+              <div class="agent-cards" id="live-signal-cards">
 
                 <!-- Technical Agent -->
                 <div class="agent-card agent-card--bullish">
@@ -331,15 +311,15 @@
               </div>
               <div class="context-card__row">
                 <span class="context-card__row-label">Risk Level</span>
-                <span class="context-card__row-value pill pill--blue" data-priya="Conservative" data-arjun="Aggressive" style="font-size:11px; padding:2px 10px;">Conservative</span>
+                <span class="context-card__row-value pill pill--blue" data-bind="risk_profile" style="font-size:11px; padding:2px 10px;">—</span>
               </div>
               <div class="context-card__row">
-                <span class="context-card__row-label">Max Position</span>
-                <span class="context-card__row-value" data-priya="5%" data-arjun="20%">5%</span>
+                <span class="context-card__row-label">Risk Score</span>
+                <span class="context-card__row-value" data-bind="risk_score_100">—</span>
               </div>
               <div class="context-card__row">
                 <span class="context-card__row-label">Investment Horizon</span>
-                <span class="context-card__row-value" data-priya="3–5 years" data-arjun="6–12 months">3–5 years</span>
+                <span class="context-card__row-value" data-bind="horizon">—</span>
               </div>
             </div>
 
@@ -349,58 +329,25 @@
               <div class="donut-chart-container">
                 <svg viewBox="0 0 140 140">
                   <circle cx="70" cy="70" r="55" fill="none" stroke="#E8E6E1" stroke-width="14"/>
-                  <circle cx="70" cy="70" r="55" fill="none" stroke="#4361EE" stroke-width="14"
-                    stroke-dasharray="86.4 259.2" stroke-dashoffset="0" transform="rotate(-90 70 70)"/>
-                  <circle cx="70" cy="70" r="55" fill="none" stroke="#0D9668" stroke-width="14"
-                    stroke-dasharray="69.1 276.5" stroke-dashoffset="-86.4" transform="rotate(-90 70 70)"/>
-                  <circle cx="70" cy="70" r="55" fill="none" stroke="#F59E0B" stroke-width="14"
-                    stroke-dasharray="51.8 293.8" stroke-dashoffset="-155.5" transform="rotate(-90 70 70)"/>
-                  <circle cx="70" cy="70" r="55" fill="none" stroke="#C2553A" stroke-width="14"
-                    stroke-dasharray="34.6 311" stroke-dashoffset="-207.3" transform="rotate(-90 70 70)"/>
-                  <circle cx="70" cy="70" r="55" fill="none" stroke="#94A3B8" stroke-width="14"
-                    stroke-dasharray="103.7 241.9" stroke-dashoffset="-241.9" transform="rotate(-90 70 70)"/>
-                  <text x="70" y="66" text-anchor="middle" font-size="18" font-weight="700" fill="#1B2A4A">₹1.42</text>
-                  <text x="70" y="82" text-anchor="middle" font-size="10" fill="#94A3B8">Cr</text>
+                  <g id="live-donut-small" data-radius="55" data-cx="70" data-cy="70" data-stroke="14"></g>
+                  
+                  <text x="70" y="66" text-anchor="middle" font-size="15" font-weight="700" fill="#1B2A4A" data-bind="portfolio_value">—</text>
+                  <text x="70" y="82" text-anchor="middle" font-size="9" fill="#94A3B8">portfolio</text>
                 </svg>
               </div>
               <!-- Holdings -->
-              <div class="holding-row">
-                <span class="holding-row__ticker">RELIANCE</span>
-                <div class="holding-row__bar"><div class="holding-row__bar-fill" style="width:25%;background:var(--blue)"></div></div>
-                <span class="holding-row__pct">25%</span>
-              </div>
-              <div class="holding-row">
-                <span class="holding-row__ticker">TCS</span>
-                <div class="holding-row__bar"><div class="holding-row__bar-fill" style="width:20%;background:var(--green)"></div></div>
-                <span class="holding-row__pct">20%</span>
-              </div>
-              <div class="holding-row">
-                <span class="holding-row__ticker">HDFCBANK</span>
-                <div class="holding-row__bar"><div class="holding-row__bar-fill" style="width:15%;background:var(--amber)"></div></div>
-                <span class="holding-row__pct">15%</span>
-              </div>
-              <div class="holding-row">
-                <span class="holding-row__ticker">INFY</span>
-                <div class="holding-row__bar"><div class="holding-row__bar-fill" style="width:10%;background:var(--red)"></div></div>
-                <span class="holding-row__pct">10%</span>
-              </div>
-              <div class="holding-row">
-                <span class="holding-row__ticker">Others</span>
-                <div class="holding-row__bar"><div class="holding-row__bar-fill" style="width:30%;background:var(--slate-light)"></div></div>
-                <span class="holding-row__pct">30%</span>
-              </div>
+              <div id="live-holdings"></div>
 
-              <div class="concentration-warning">
+              <div class="concentration-warning" id="live-concentration" style="display:none">
                 <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                RELIANCE nearing 5% allocation ceiling
+                <span data-bind="concentration"></span>
               </div>
             </div>
 
             <!-- Profile Effect -->
             <div class="profile-effect-card profile-dependent profile-priya">
               <div class="profile-effect-card__label">Profile Effect</div>
-              <p data-show-profile="priya"><strong>For Priya:</strong> HOLD is preferred because Reliance is near your allocation ceiling. Adding more would exceed your conservative risk profile.</p>
-              <p data-show-profile="arjun" style="display:none"><strong>For Arjun:</strong> BUY remains suitable due to higher risk tolerance. You can comfortably allocate 15–20% to Reliance within your aggressive profile.</p>
+              <p data-bind="personalized_reason">—</p>
             </div>
 
             <!-- Demo State Buttons -->
@@ -427,20 +374,17 @@
         <!-- Header -->
         <div class="analysis__header">
           <div class="analysis__header-left">
-            <h2>Reliance Industries Ltd.</h2>
+            <h2 data-bind="company_name">—</h2>
             <div class="analysis__header-meta">
-              <span>NSE: RELIANCE</span>
-              <span class="pill pill--slate" style="font-size:10px; padding:2px 8px;">Large Cap</span>
-              <span class="pill pill--green" style="font-size:10px; padding:2px 8px;"><span class="dot"></span> Market Open</span>
+              <span data-bind="listing">—</span>
+              <span class="pill pill--slate" style="font-size:10px; padding:2px 8px;" data-bind="as_of">—</span>
+              <span class="pill" style="font-size:10px; padding:2px 8px;" data-bind="session"><span class="dot"></span> —</span>
             </div>
           </div>
           <div class="analysis__header-right">
             <div style="text-align:right">
-              <div class="analysis__price-big">₹2,987.45</div>
-              <div class="analysis__change-big text-green">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-                +₹36.65 (+1.24%)
-              </div>
+              <div class="analysis__price-big" data-bind="price">—</div>
+              <div class="analysis__change-big" data-bind="change_detail">—</div>
             </div>
           </div>
         </div>
@@ -448,98 +392,22 @@
         <!-- Mini Recommendation (sticky) -->
         <div class="mini-rec">
           <div class="mini-rec__signal">
-            <span class="pill pill--green"><span class="dot"></span> BUY</span>
-            <span class="pill pill--blue">82% Confidence</span>
+            <span class="pill" data-bind="verdict">—</span>
+            <span class="pill pill--blue" data-bind="verdict_confidence">—</span>
           </div>
           <div class="mini-rec__separator"></div>
-          <span class="mini-rec__thesis">Momentum strong; valuation risk calls for disciplined sizing.</span>
+          <span class="mini-rec__thesis" data-bind="summary">—</span>
           <button class="btn btn--ghost btn--sm" data-navigate="reasoning">Open AI Reasoning →</button>
         </div>
 
         <!-- Price Chart -->
         <div class="chart-wrapper">
           <div class="chart-wrapper__header">
-            <h3 class="section-title" style="margin:0">Price Chart</h3>
-            <div class="timeframe-pills">
-              <span class="timeframe-pill">1D</span>
-              <span class="timeframe-pill">1W</span>
-              <span class="timeframe-pill active">1M</span>
-              <span class="timeframe-pill">6M</span>
-              <span class="timeframe-pill">1Y</span>
-            </div>
+            <h3 class="section-title" style="margin:0">Price History</h3>
           </div>
-          <div class="chart-area">
-            <svg viewBox="0 0 800 280" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#4361EE" stop-opacity="0.12"/>
-                  <stop offset="100%" stop-color="#4361EE" stop-opacity="0.01"/>
-                </linearGradient>
-              </defs>
-              <!-- Grid -->
-              <line x1="0" y1="70" x2="800" y2="70" stroke="#E8E6E1" stroke-width="0.5" stroke-dasharray="4 4"/>
-              <line x1="0" y1="140" x2="800" y2="140" stroke="#E8E6E1" stroke-width="0.5" stroke-dasharray="4 4"/>
-              <line x1="0" y1="210" x2="800" y2="210" stroke="#E8E6E1" stroke-width="0.5" stroke-dasharray="4 4"/>
-              <!-- Price labels -->
-              <text x="790" y="68" font-size="10" fill="#94A3B8" text-anchor="end">₹3,050</text>
-              <text x="790" y="138" font-size="10" fill="#94A3B8" text-anchor="end">₹2,980</text>
-              <text x="790" y="208" font-size="10" fill="#94A3B8" text-anchor="end">₹2,910</text>
-              <!-- Area -->
-              <path d="M0,220 C30,215 60,200 100,195 C140,190 180,180 220,175 C260,170 300,190 340,185 C380,180 420,160 460,140 C500,120 540,110 580,105 C620,100 660,95 700,80 C740,65 770,55 800,50 L800,280 L0,280 Z" fill="url(#areaGrad)"/>
-              <!-- Line -->
-              <path d="M0,220 C30,215 60,200 100,195 C140,190 180,180 220,175 C260,170 300,190 340,185 C380,180 420,160 460,140 C500,120 540,110 580,105 C620,100 660,95 700,80 C740,65 770,55 800,50" fill="none" stroke="#4361EE" stroke-width="2.5" stroke-linecap="round"/>
-              <!-- SMA20 -->
-              <path d="M0,225 C80,210 160,195 240,185 C320,175 400,175 480,155 C560,135 640,110 720,90 C760,80 800,70 800,65" fill="none" stroke="#F59E0B" stroke-width="1.2" stroke-dasharray="6 3" opacity="0.7"/>
-              <!-- SMA50 -->
-              <path d="M0,235 C100,225 200,210 300,200 C400,190 500,175 600,155 C700,135 750,120 800,110" fill="none" stroke="#C2553A" stroke-width="1.2" stroke-dasharray="6 3" opacity="0.7"/>
-              <!-- Current dot -->
-              <circle cx="800" cy="50" r="4" fill="#4361EE"/>
-              <circle cx="800" cy="50" r="8" fill="#4361EE" opacity="0.15"/>
-              <!-- Support / Resistance -->
-              <line x1="0" y1="245" x2="800" y2="245" stroke="#0D9668" stroke-width="1" stroke-dasharray="8 4" opacity="0.4"/>
-              <text x="8" y="242" font-size="9" fill="#0D9668" opacity="0.7">Support ₹2,890</text>
-              <line x1="0" y1="30" x2="800" y2="30" stroke="#C2553A" stroke-width="1" stroke-dasharray="8 4" opacity="0.4"/>
-              <text x="8" y="27" font-size="9" fill="#C2553A" opacity="0.7">Resistance ₹3,080</text>
-            </svg>
-          </div>
-          <div class="volume-area">
-            <svg viewBox="0 0 800 60" preserveAspectRatio="none">
-              <!-- Volume bars -->
-              <rect x="10" y="35" width="22" height="25" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="40" y="30" width="22" height="30" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="70" y="25" width="22" height="35" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="100" y="32" width="22" height="28" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="130" y="28" width="22" height="32" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="160" y="22" width="22" height="38" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="190" y="30" width="22" height="30" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="220" y="35" width="22" height="25" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="250" y="20" width="22" height="40" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="280" y="18" width="22" height="42" fill="#4361EE" opacity="0.2" rx="2"/>
-              <rect x="310" y="25" width="22" height="35" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="340" y="30" width="22" height="30" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="370" y="28" width="22" height="32" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="400" y="15" width="22" height="45" fill="#4361EE" opacity="0.2" rx="2"/>
-              <rect x="430" y="12" width="22" height="48" fill="#4361EE" opacity="0.25" rx="2"/>
-              <rect x="460" y="18" width="22" height="42" fill="#4361EE" opacity="0.2" rx="2"/>
-              <rect x="490" y="22" width="22" height="38" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="520" y="10" width="22" height="50" fill="#0D9668" opacity="0.25" rx="2"/>
-              <rect x="550" y="8" width="22" height="52" fill="#0D9668" opacity="0.3" rx="2"/>
-              <rect x="580" y="14" width="22" height="46" fill="#0D9668" opacity="0.25" rx="2"/>
-              <rect x="610" y="20" width="22" height="40" fill="#4361EE" opacity="0.15" rx="2"/>
-              <rect x="640" y="16" width="22" height="44" fill="#4361EE" opacity="0.2" rx="2"/>
-              <rect x="670" y="8" width="22" height="52" fill="#0D9668" opacity="0.3" rx="2"/>
-              <rect x="700" y="5" width="22" height="55" fill="#0D9668" opacity="0.35" rx="2"/>
-              <rect x="730" y="10" width="22" height="50" fill="#0D9668" opacity="0.3" rx="2"/>
-              <rect x="760" y="12" width="22" height="48" fill="#0D9668" opacity="0.25" rx="2"/>
-            </svg>
-          </div>
-          <!-- Chart legend -->
-          <div style="display:flex; gap:20px; margin-top:10px; padding-top:10px; border-top:1px solid var(--divider-light)">
-            <span class="text-xs text-muted" style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:2px;background:#4361EE;border-radius:1px;display:inline-block"></span> Price</span>
-            <span class="text-xs text-muted" style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:2px;background:#F59E0B;border-radius:1px;display:inline-block;opacity:0.7"></span> SMA 20</span>
-            <span class="text-xs text-muted" style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:2px;background:#C2553A;border-radius:1px;display:inline-block;opacity:0.7"></span> SMA 50</span>
-            <span class="text-xs text-muted" style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;background:#0D9668;border-radius:1px;display:inline-block;opacity:0.3"></span> Above-avg volume</span>
-          </div>
+          <!-- No mock series and no mock axis labels: an invented support line
+               is a price somebody might act on. -->
+          <div class="chart-placeholder chart-placeholder--tall" data-bind="history_note">—</div>
         </div>
 
         <!-- Technical Indicators -->
@@ -547,33 +415,23 @@
         <div class="tech-indicators mb-24">
           <div class="tech-indicator">
             <div class="tech-indicator__label">RSI (14)</div>
-            <div class="tech-indicator__value">62.4</div>
-            <div class="tech-indicator__sub text-green">Momentum — not overbought</div>
+            <div class="tech-indicator__value" data-bind="rsi">—</div>
+            <div class="tech-indicator__sub" data-bind="rsi_note">—</div>
           </div>
           <div class="tech-indicator">
-            <div class="tech-indicator__label">MACD</div>
-            <div class="tech-indicator__value text-green">+4.82</div>
-            <div class="tech-indicator__sub">Bullish crossover on Aug 28</div>
+            <div class="tech-indicator__label">Momentum (20d)</div>
+            <div class="tech-indicator__value" data-bind="momentum">—</div>
+            <div class="tech-indicator__sub" data-bind="momentum_note">—</div>
           </div>
           <div class="tech-indicator">
-            <div class="tech-indicator__label">SMA 20</div>
-            <div class="tech-indicator__value">₹2,945</div>
-            <div class="tech-indicator__sub text-green">Price above SMA20</div>
+            <div class="tech-indicator__label">Volatility (ann.)</div>
+            <div class="tech-indicator__value" data-bind="volatility">—</div>
+            <div class="tech-indicator__sub" data-bind="volatility_note">—</div>
           </div>
           <div class="tech-indicator">
-            <div class="tech-indicator__label">SMA 50</div>
-            <div class="tech-indicator__value">₹2,878</div>
-            <div class="tech-indicator__sub text-green">Price above SMA50</div>
-          </div>
-          <div class="tech-indicator">
-            <div class="tech-indicator__label">Support</div>
-            <div class="tech-indicator__value">₹2,890</div>
-            <div class="tech-indicator__sub">3.3% below current price</div>
-          </div>
-          <div class="tech-indicator">
-            <div class="tech-indicator__label">Resistance</div>
-            <div class="tech-indicator__value">₹3,080</div>
-            <div class="tech-indicator__sub">3.1% above current price</div>
+            <div class="tech-indicator__label">Volume vs 30d avg</div>
+            <div class="tech-indicator__value" data-bind="volume_ratio">—</div>
+            <div class="tech-indicator__sub" data-bind="volume_note">—</div>
           </div>
         </div>
 
@@ -714,7 +572,7 @@
 
         <!-- 4 Agent Cards -->
         <h3 class="section-title">Agent Analysis</h3>
-        <div class="reasoning-agents">
+        <div class="reasoning-agents" id="live-agent-cards">
 
           <!-- Technical Agent -->
           <div class="reasoning-agent-card">
@@ -873,11 +731,11 @@
             <span class="synthesis-card__rec-text">RELIANCE — 82% Confidence</span>
           </div>
           <p class="synthesis-card__reasoning">
-            Weighted analysis across all four agents produces a moderate-confidence BUY signal. Bullish momentum from Technical (84%) and Volume (78%) agents outweighs the Fundamental agent's bearish valuation concern (68%). The degraded Sentiment agent (61%, neutral) reduces overall confidence but does not invalidate the signal.
+            <span data-bind="summary">—</span>
           </p>
           <div class="synthesis-card__profile-impact">
-            <strong data-priya="Impact for Priya (Conservative):" data-arjun="Impact for Arjun (Aggressive):">Impact for Priya (Conservative):</strong>
-            <span data-priya="HOLD is preferred — Reliance is already near your 5% allocation ceiling. Adding more would exceed your conservative risk profile. Monitor for a pullback entry." data-arjun="BUY is suitable — your aggressive risk profile supports 15–20% allocation to Reliance. The momentum signals align with your shorter investment horizon.">HOLD is preferred — Reliance is already near your 5% allocation ceiling. Adding more would exceed your conservative risk profile. Monitor for a pullback entry.</span>
+            <strong data-bind="profile_impact_label">Profile impact:</strong>
+            <span data-bind="personalized_reason">—</span>
           </div>
         </div>
 
@@ -927,10 +785,10 @@
             <p class="text-sm text-slate">Understanding how recommendations impact your portfolio.</p>
           </div>
           <div style="text-align:right">
-            <div class="portfolio__value" data-priya="₹1.42 Cr" data-arjun="₹2.18 Cr">₹1.42 Cr</div>
+            <div class="portfolio__value" data-bind="portfolio_value">—</div>
             <span class="stat-card__delta stat-card__delta--up">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-              <span data-priya="+₹1,23,450 today (+0.87%)" data-arjun="+₹2,87,600 today (+1.32%)">+₹1,23,450 today (+0.87%)</span>
+              <span data-bind="position_value">—</span>
             </span>
           </div>
         </div>
@@ -939,18 +797,18 @@
         <div class="risk-cards">
           <div class="card" style="padding:18px">
             <div class="text-xs text-slate fw-500 mb-4" style="text-transform:uppercase;letter-spacing:0.5px">Risk Score</div>
-            <div class="text-xl fw-700 tabular" data-priya="32 / 100" data-arjun="74 / 100">32 / 100</div>
-            <div class="text-xs mt-4" data-priya="Low Risk — well diversified" data-arjun="High Risk — concentrated positions" style="color:var(--green)">Low Risk — well diversified</div>
+            <div class="text-xl fw-700 tabular" data-bind="risk_score_100">—</div>
+            <div class="text-xs mt-4" data-bind="risk_label">—</div>
           </div>
           <div class="card" style="padding:18px">
             <div class="text-xs text-slate fw-500 mb-4" style="text-transform:uppercase;letter-spacing:0.5px">Diversification</div>
-            <div class="text-xl fw-700 tabular" data-priya="Good" data-arjun="Needs Attention">Good</div>
-            <div class="text-xs text-slate mt-4">Across 8 sectors, 12 holdings</div>
+            <div class="text-xl fw-700 tabular" data-bind="diversification">—</div>
+            <div class="text-xs text-slate mt-4" data-bind="holdings_note">—</div>
           </div>
           <div class="card" style="padding:18px">
             <div class="text-xs text-slate fw-500 mb-4" style="text-transform:uppercase;letter-spacing:0.5px">Top Concentration</div>
-            <div class="text-xl fw-700 tabular">RELIANCE</div>
-            <div class="text-xs mt-4" style="color:var(--amber)" data-priya="25% — nearing 5% ceiling" data-arjun="18% — within tolerance">25% — nearing 5% ceiling</div>
+            <div class="text-xl fw-700 tabular" data-bind="top_holding">—</div>
+            <div class="text-xs mt-4" style="color:var(--amber)" data-bind="top_holding_note">—</div>
           </div>
         </div>
 
@@ -961,26 +819,12 @@
             <h3 class="section-title" style="align-self:flex-start">Allocation</h3>
             <svg viewBox="0 0 200 200">
               <circle cx="100" cy="100" r="75" fill="none" stroke="#E8E6E1" stroke-width="20"/>
-              <circle cx="100" cy="100" r="75" fill="none" stroke="#4361EE" stroke-width="20"
-                stroke-dasharray="117.8 353.4" stroke-dashoffset="0" transform="rotate(-90 100 100)" stroke-linecap="round"/>
-              <circle cx="100" cy="100" r="75" fill="none" stroke="#0D9668" stroke-width="20"
-                stroke-dasharray="94.2 376.9" stroke-dashoffset="-117.8" transform="rotate(-90 100 100)" stroke-linecap="round"/>
-              <circle cx="100" cy="100" r="75" fill="none" stroke="#F59E0B" stroke-width="20"
-                stroke-dasharray="70.7 400.5" stroke-dashoffset="-212" transform="rotate(-90 100 100)" stroke-linecap="round"/>
-              <circle cx="100" cy="100" r="75" fill="none" stroke="#C2553A" stroke-width="20"
-                stroke-dasharray="47.1 424" stroke-dashoffset="-282.7" transform="rotate(-90 100 100)" stroke-linecap="round"/>
-              <circle cx="100" cy="100" r="75" fill="none" stroke="#94A3B8" stroke-width="20"
-                stroke-dasharray="141.4 329.9" stroke-dashoffset="-329.9" transform="rotate(-90 100 100)" stroke-linecap="round"/>
-              <text x="100" y="96" text-anchor="middle" font-size="22" font-weight="700" fill="#1B2A4A">₹1.42</text>
-              <text x="100" y="116" text-anchor="middle" font-size="12" fill="#94A3B8">Crore</text>
+              <g id="live-donut-big" data-radius="75" data-cx="100" data-cy="100" data-stroke="20"></g>
+              
+              <text x="100" y="96" text-anchor="middle" font-size="18" font-weight="700" fill="#1B2A4A" data-bind="portfolio_value">—</text>
+              <text x="100" y="118" text-anchor="middle" font-size="11" fill="#94A3B8">marked to market</text>
             </svg>
-            <div class="portfolio__legend">
-              <div class="portfolio__legend-item"><div class="portfolio__legend-dot" style="background:#4361EE"></div> RELIANCE 25%</div>
-              <div class="portfolio__legend-item"><div class="portfolio__legend-dot" style="background:#0D9668"></div> TCS 20%</div>
-              <div class="portfolio__legend-item"><div class="portfolio__legend-dot" style="background:#F59E0B"></div> HDFCBANK 15%</div>
-              <div class="portfolio__legend-item"><div class="portfolio__legend-dot" style="background:#C2553A"></div> INFY 10%</div>
-              <div class="portfolio__legend-item"><div class="portfolio__legend-dot" style="background:#94A3B8"></div> Others 30%</div>
-            </div>
+            <div class="portfolio__legend" id="live-legend"></div>
           </div>
 
           <!-- Holdings Table -->
@@ -995,154 +839,21 @@
                   <th>Risk</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td class="holdings-table__ticker">RELIANCE</td>
-                  <td>25%</td>
-                  <td>₹35.5L</td>
-                  <td class="text-green">+₹4.2L (+13.4%)</td>
-                  <td><span class="pill pill--amber" style="font-size:10px; padding:2px 8px;">High</span></td>
-                </tr>
-                <tr>
-                  <td class="holdings-table__ticker">TCS</td>
-                  <td>20%</td>
-                  <td>₹28.4L</td>
-                  <td class="text-green">+₹3.1L (+12.2%)</td>
-                  <td><span class="pill pill--green" style="font-size:10px; padding:2px 8px;">Low</span></td>
-                </tr>
-                <tr>
-                  <td class="holdings-table__ticker">HDFCBANK</td>
-                  <td>15%</td>
-                  <td>₹21.3L</td>
-                  <td class="text-green">+₹1.8L (+9.2%)</td>
-                  <td><span class="pill pill--green" style="font-size:10px; padding:2px 8px;">Low</span></td>
-                </tr>
-                <tr>
-                  <td class="holdings-table__ticker">INFY</td>
-                  <td>10%</td>
-                  <td>₹14.2L</td>
-                  <td class="text-red">-₹0.6L (-4.1%)</td>
-                  <td><span class="pill pill--slate" style="font-size:10px; padding:2px 8px;">Med</span></td>
-                </tr>
-                <tr>
-                  <td class="holdings-table__ticker">ICICIBANK</td>
-                  <td>8%</td>
-                  <td>₹11.4L</td>
-                  <td class="text-green">+₹1.5L (+15.1%)</td>
-                  <td><span class="pill pill--green" style="font-size:10px; padding:2px 8px;">Low</span></td>
-                </tr>
-                <tr>
-                  <td class="holdings-table__ticker">Others</td>
-                  <td>22%</td>
-                  <td>₹31.2L</td>
-                  <td class="text-green">+₹2.4L (+8.3%)</td>
-                  <td><span class="pill pill--slate" style="font-size:10px; padding:2px 8px;">Varied</span></td>
-                </tr>
-              </tbody>
+              <tbody id="live-holdings-table"></tbody>
             </table>
           </div>
         </div>
 
         <!-- Profile Comparison -->
-        <h3 class="section-title">Profile Comparison — RELIANCE Recommendation</h3>
+        <h3 class="section-title" data-bind="comparison_title">Profile Comparison</h3>
         <p class="text-sm text-slate mb-16">Same research, different outcomes based on investor risk profile.</p>
 
-        <div class="profile-comparison">
-          <!-- Priya -->
-          <div class="profile-card profile-card--active" data-profile="priya">
-            <div class="profile-card__header">
-              <div class="profile-card__avatar profile-card__avatar--priya">P</div>
-              <div>
-                <div class="profile-card__name">Priya Sharma</div>
-                <div class="profile-card__risk">Conservative · 3–5 year horizon</div>
-              </div>
-              <span class="pill pill--slate" style="margin-left:auto; font-size:10px; padding:3px 10px;">HOLD</span>
-            </div>
-            <div class="profile-card__rows">
-              <div class="profile-card__row">
-                <span class="profile-card__row-label">Recommendation</span>
-                <span class="profile-card__row-value text-amber">HOLD</span>
-              </div>
-              <div class="profile-card__row">
-                <span class="profile-card__row-label">Max Allocation</span>
-                <span class="profile-card__row-value">5%</span>
-              </div>
-              <div class="profile-card__row">
-                <span class="profile-card__row-label">Current Holding</span>
-                <span class="profile-card__row-value">4.8%</span>
-              </div>
-              <div class="profile-card__row">
-                <span class="profile-card__row-label">Action</span>
-                <span class="profile-card__row-value">No change</span>
-              </div>
-            </div>
-            <div class="profile-card__explanation">
-              Reliance is near the 5% allocation ceiling for your conservative profile. The bullish momentum signal is noted, but adding more would exceed your risk tolerance. <strong>Recommendation: hold current position and monitor for a pullback entry.</strong>
-            </div>
-          </div>
+        <div class="profile-comparison" id="live-profile-comparison"></div>
 
-          <!-- Arjun -->
-          <div class="profile-card" data-profile="arjun">
-            <div class="profile-card__header">
-              <div class="profile-card__avatar profile-card__avatar--arjun">A</div>
-              <div>
-                <div class="profile-card__name">Arjun Mehta</div>
-                <div class="profile-card__risk">Aggressive · 6–12 month horizon</div>
-              </div>
-              <span class="pill pill--green" style="margin-left:auto; font-size:10px; padding:3px 10px;">BUY</span>
-            </div>
-            <div class="profile-card__rows">
-              <div class="profile-card__row">
-                <span class="profile-card__row-label">Recommendation</span>
-                <span class="profile-card__row-value text-green">BUY</span>
-              </div>
-              <div class="profile-card__row">
-                <span class="profile-card__row-label">Max Allocation</span>
-                <span class="profile-card__row-value">20%</span>
-              </div>
-              <div class="profile-card__row">
-                <span class="profile-card__row-label">Current Holding</span>
-                <span class="profile-card__row-value">12%</span>
-              </div>
-              <div class="profile-card__row">
-                <span class="profile-card__row-label">Action</span>
-                <span class="profile-card__row-value">Add 3–5%</span>
-              </div>
-            </div>
-            <div class="profile-card__explanation">
-              Your aggressive profile supports up to 20% allocation to Reliance. The bullish momentum and volume accumulation signals align with your shorter investment horizon. <strong>Recommendation: add 3–5% to capitalize on current momentum.</strong>
-            </div>
-          </div>
-        </div>
-
-        <!-- Rebalance Suggestions -->
-        <div class="rebalance-card">
-          <div class="rebalance-card__title">Rebalance Suggestions</div>
-          <div class="rebalance-item">
-            <span class="rebalance-item__action rebalance-item__action--hold">HOLD</span>
-            <span class="rebalance-item__ticker">RELIANCE</span>
-            <span class="rebalance-item__reason">At allocation ceiling — maintain current position</span>
-            <span class="pill pill--slate" style="font-size:10px; padding:2px 8px;">25% → 25%</span>
-          </div>
-          <div class="rebalance-item">
-            <span class="rebalance-item__action rebalance-item__action--add">ADD</span>
-            <span class="rebalance-item__ticker">HDFCBANK</span>
-            <span class="rebalance-item__reason">Underweight relative to target — strong fundamentals</span>
-            <span class="pill pill--green" style="font-size:10px; padding:2px 8px;">15% → 18%</span>
-          </div>
-          <div class="rebalance-item">
-            <span class="rebalance-item__action rebalance-item__action--reduce">REDUCE</span>
-            <span class="rebalance-item__ticker">INFY</span>
-            <span class="rebalance-item__reason">Weak momentum and negative P&L trend</span>
-            <span class="pill pill--red" style="font-size:10px; padding:2px 8px;">10% → 7%</span>
-          </div>
-          <div class="rebalance-item">
-            <span class="rebalance-item__action rebalance-item__action--add">ADD</span>
-            <span class="rebalance-item__ticker">ICICIBANK</span>
-            <span class="rebalance-item__reason">Strong return and low risk contribution</span>
-            <span class="pill pill--green" style="font-size:10px; padding:2px 8px;">8% → 10%</span>
-          </div>
-        </div>
+        <!-- The "Rebalance Suggestions" panel that stood here listed target
+             weights and BUY / ADD / REDUCE actions that no part of this system
+             computes. Removed rather than rebuilt: invented advice a user
+             might act on is worse than an absent panel. -->
 
       </section>
 
@@ -1480,5 +1191,8 @@
 
 
 <script src="app.js"></script>
+<!-- live.js loads second on purpose: app.js owns navigation, theming and
+     panel chrome; live.js owns every value on the page. -->
+<script src="live.js"></script>
 </body>
 </html>

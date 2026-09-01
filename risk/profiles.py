@@ -85,14 +85,16 @@ def build_personalized_reason(
     if stock_exposure > exposure_ceiling:
         reasons.append(
             f"Your {symbol} position is {exposure_pct}% of your portfolio, "
-            f"above the {exposure_ceiling_pct}% single-stock ceiling for a "
+            f"above the {exposure_ceiling_pct}% single-stock ceiling for "
+            f"{'an' if risk_profile[:1].upper() in 'AEIOU' else 'a'} "
             f"{risk_profile.title()} investor. This concentration increases "
             f"your downside risk if {symbol} underperforms."
         )
     else:
         reasons.append(
             f"Your {symbol} position is {exposure_pct}% of your portfolio, "
-            f"within the {exposure_ceiling_pct}% single-stock ceiling for a "
+            f"within the {exposure_ceiling_pct}% single-stock ceiling for "
+            f"{'an' if risk_profile[:1].upper() in 'AEIOU' else 'a'} "
             f"{risk_profile.title()} investor."
         )
 

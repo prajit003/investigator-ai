@@ -587,3 +587,52 @@ git push
 Once this is pushed, don't change variable names casually.
 
 Next, we should build the project in the fastest possible order: first the shared Python data models → then the agents → RAG → risk → backend → frontend integration. That way all five people can code simultaneously without waiting for each other.
+---
+
+15. LIVE DATA ADDENDUM (agreed after the fixture build)
+
+The system originally read three hand-written JSON fixtures. It now reads live
+sources through the `feeds/` package. Nothing above `feeds/` knows or cares where
+a number came from, but a live number carries obligations a fixture does not, so
+four fields were added. These are ADDITIONS. No existing name changed.
+
+15.1 market_data gains provenance
+
+  as_of    the timestamp the PROVIDER stamped on this quote, e.g.
+           "2026-09-01 15:08:36". Not the time we fetched it.
+  source   which adapter produced it, e.g. "moneycontrol", "cache", "fixture".
+
+A live price with no timestamp and no provenance cannot be audited, and the UI
+must be able to grey out a figure that is no longer current. Both are strings and
+both default to "", so a fixture-mode object is still valid.
+
+15.2 rsi, momentum and volatility become OPTIONAL
+
+They are computed from accumulated daily closes, not handed to us by the quote
+feed, so early on they are genuinely absent.
+
+  rsi         float or null
+  momentum    float or null
+  volatility  float or null
+
+null means MISSING, and the price agent must say so and drop that term from its
+score. It must never be read as "neutral". Defaulting rsi to 50.0 would let an
+indicator we do not have cast a vote — the same mistake this document rejects
+everywhere else.
+
+15.3 evidence gains a link
+
+  url   the public address of the document the quote came from, e.g. the BSE
+        attachment PDF. Empty string when the corpus entry has no public URL.
+
+A citation the reader cannot open is a weaker citation. The grounding guard is
+unchanged: url, like text, is copied from the corpus and never written by a model.
+
+15.4 Modes
+
+  DATA_MODE=auto      live, then last-known-good cache, then fixture (default)
+  DATA_MODE=live      live only; a provider failure degrades that dimension
+  DATA_MODE=fixtures  never touches the network. CI and validate.py run here.
+
+Every downgrade appends a line to data_quality.warnings naming what failed. A
+silent fallback would present stale or synthetic numbers as live.

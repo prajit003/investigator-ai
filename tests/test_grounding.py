@@ -39,4 +39,36 @@ assert filing_data_status("INFY") == "UNAVAILABLE" and retrieve("x", "INFY") == 
 assert all(c["symbol"] == "RELIANCE" for c in retrieve("margin growth deals", "RELIANCE", k=9))
 print("symbol isolation held")
 
+# 6. A LIVE-shaped chunk — the kind feeds/filings.py builds from a BSE
+#    announcement, carrying a public url — goes through the identical guard.
+#    The url must survive into the evidence (the UI links to it) and a
+#    fabricated id must still be dropped even when the pool is live.
+live_chunk = {
+    "chunk_id": "BSEDEADBEEF_c1",
+    "symbol": "RELIANCE",
+    "source_name": "Quarterly Results",
+    "source_type": "FILING",
+    "source_date": "2026-08-14",
+    "page": 1,
+    "section": "Result",
+    "text": ("EBITDA margin for the quarter stood at 16.4 per cent, down 140 basis "
+             "points year on year on continued capex in the new energy segment."),
+    "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/deadbeef.pdf",
+}
+live_pool = retrieve("margin debt capex", "RELIANCE", k=2, candidates=[live_chunk] + retrieved)
+assert any(c["chunk_id"] == "BSEDEADBEEF_c1" for c in live_pool), "FAIL: live chunk not retrievable"
+
+live_ev, live_warn = verify_evidence(["BSEDEADBEEF_c1", "BSE_NOT_RETRIEVED_c1"], live_pool)
+assert [e["chunk_id"] for e in live_ev] == ["BSEDEADBEEF_c1"], "FAIL: fabricated live id survived"
+assert live_warn, "FAIL: dropped live citation was not reported"
+assert live_ev[0]["url"] == live_chunk["url"], "FAIL: source url lost between corpus and evidence"
+assert live_ev[0]["text"] == live_chunk["text"], "FAIL: live evidence text not verbatim"
+print("\nlive BSE chunk: verbatim, linked, and fabricated ids still dropped")
+
+# 7. Symbol isolation holds for a caller-supplied pool too — a live corpus is
+#    re-filtered, not trusted, so one symbol's filings cannot leak into another.
+leaked = retrieve("margin", "TCS", k=5, candidates=[live_chunk])
+assert leaked == [], f"FAIL: a RELIANCE chunk reached a TCS query: {leaked}"
+print("symbol isolation holds for live candidate pools")
+
 print("\nPASS - no uncited or cross-symbol evidence can reach the user")

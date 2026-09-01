@@ -1,4 +1,12 @@
 {
+  "_comment": [
+    "Two demo investors. Quantities were chosen against REAL market prices so",
+    "the concentration rules fire as intended once holdings are marked to",
+    "market: u1's largest position clears the 25% conservative ceiling, u2's",
+    "does not. average_price is spread either side of the current mark so the",
+    "P&L column shows both winners and losers rather than one uniform sign.",
+    "current_value is a seed only \u2014 risk.mark_to_market recomputes it live."
+  ],
   "u1": {
     "user_id": "u1",
     "user_name": "Priya",
@@ -6,12 +14,32 @@
     "risk_score": 20,
     "investment_horizon": "LONG_TERM",
     "portfolio": {
-      "portfolio_value": 500000,
+      "portfolio_value": 502203.7,
       "holdings": [
-        {"symbol": "RELIANCE", "quantity": 60, "average_price": 2500, "current_value": 150000},
-        {"symbol": "TCS", "quantity": 30, "average_price": 3500, "current_value": 105000},
-        {"symbol": "HDFCBANK", "quantity": 100, "average_price": 1500, "current_value": 150000},
-        {"symbol": "INFY", "quantity": 50, "average_price": 1900, "current_value": 95000}
+        {
+          "symbol": "RELIANCE",
+          "quantity": 115,
+          "average_price": 1204.28,
+          "current_value": 150535.0
+        },
+        {
+          "symbol": "HDFCBANK",
+          "quantity": 183,
+          "average_price": 626.47,
+          "current_value": 130277.7
+        },
+        {
+          "symbol": "TCS",
+          "quantity": 51,
+          "average_price": 2511.14,
+          "current_value": 120819.0
+        },
+        {
+          "symbol": "INFY",
+          "quantity": 87,
+          "average_price": 1190.68,
+          "current_value": 100572.0
+        }
       ]
     }
   },
@@ -22,18 +50,68 @@
     "risk_score": 85,
     "investment_horizon": "SHORT_TERM",
     "portfolio": {
-      "portfolio_value": 499400,
+      "portfolio_value": 1195848.8,
       "holdings": [
-        {"symbol": "RELIANCE", "quantity": 24, "average_price": 2500, "current_value": 60000},
-        {"symbol": "TCS", "quantity": 14, "average_price": 3500, "current_value": 49000},
-        {"symbol": "HDFCBANK", "quantity": 33, "average_price": 1500, "current_value": 49500},
-        {"symbol": "INFY", "quantity": 26, "average_price": 1900, "current_value": 49400},
-        {"symbol": "ICICIBANK", "quantity": 40, "average_price": 950, "current_value": 38000},
-        {"symbol": "SBIN", "quantity": 60, "average_price": 600, "current_value": 36000},
-        {"symbol": "ITC", "quantity": 100, "average_price": 440, "current_value": 44000},
-        {"symbol": "LT", "quantity": 15, "average_price": 3600, "current_value": 54000},
-        {"symbol": "BHARTIARTL", "quantity": 40, "average_price": 1550, "current_value": 62000},
-        {"symbol": "MARUTI", "quantity": 5, "average_price": 11500, "current_value": 57500}
+        {
+          "symbol": "RELIANCE",
+          "quantity": 110,
+          "average_price": 1204.28,
+          "current_value": 143990.0
+        },
+        {
+          "symbol": "TCS",
+          "quantity": 56,
+          "average_price": 2511.14,
+          "current_value": 132664.0
+        },
+        {
+          "symbol": "HDFCBANK",
+          "quantity": 185,
+          "average_price": 626.47,
+          "current_value": 131701.5
+        },
+        {
+          "symbol": "INFY",
+          "quantity": 104,
+          "average_price": 1190.68,
+          "current_value": 120224.0
+        },
+        {
+          "symbol": "ICICIBANK",
+          "quantity": 83,
+          "average_price": 1294.2,
+          "current_value": 119354.0
+        },
+        {
+          "symbol": "SBIN",
+          "quantity": 116,
+          "average_price": 982.77,
+          "current_value": 120002.0
+        },
+        {
+          "symbol": "ITC",
+          "quantity": 405,
+          "average_price": 287.93,
+          "current_value": 107973.0
+        },
+        {
+          "symbol": "LT",
+          "quantity": 27,
+          "average_price": 3422.89,
+          "current_value": 107462.7
+        },
+        {
+          "symbol": "BHARTIARTL",
+          "quantity": 58,
+          "average_price": 1708.25,
+          "current_value": 108877.6
+        },
+        {
+          "symbol": "MARUTI",
+          "quantity": 8,
+          "average_price": 13468.0,
+          "current_value": 103600.0
+        }
       ]
     }
   }

@@ -110,7 +110,12 @@ def compute_data_quality(agent_outputs: Sequence[AgentOutput], symbol: str,
 
     # An agent name may legitimately appear once; treat ANY failure under a name
     # as that source being unavailable, rather than letting a later entry mask it.
-    failed_names = {a.agent_name for a in agent_outputs if a.status == "FAILED"}
+    # An agent that ran to completion but found nothing reports
+    # signal="UNAVAILABLE". Its source is just as absent as a crashed agent's,
+    # so it must not be reported AVAILABLE while warnings say the data is
+    # missing — the two blocks are read side by side in the UI.
+    failed_names = {a.agent_name for a in agent_outputs
+                    if a.status == "FAILED" or a.signal == "UNAVAILABLE"}
     seen_names = {a.agent_name for a in agent_outputs}
 
     def avail(name: str) -> str:

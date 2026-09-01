@@ -57,9 +57,18 @@ class MarketData(Strict):
     price_change_percent: float = 0.0
     volume: int = 0
     average_volume: int = 1
-    rsi: float = 50.0
-    momentum: float = 0.0
-    volatility: float = 0.0
+    # ARCHITECTURE.md §15.2 — Optional on purpose. These are derived from
+    # accumulated daily closes, not handed over by the quote feed, so early on
+    # they are genuinely absent. None means MISSING: the price agent drops the
+    # term and says so. A default of 50.0 would let an indicator we do not have
+    # vote as "neutral".
+    rsi: Optional[float] = None
+    momentum: Optional[float] = None
+    volatility: Optional[float] = None
+    # ARCHITECTURE.md §15.1 — provenance. `as_of` is the PROVIDER's timestamp,
+    # not our fetch time; `source` names the adapter that produced this object.
+    as_of: str = ""
+    source: str = ""
 
 
 # ---- 4. the three core signals ----
@@ -89,6 +98,9 @@ class Evidence(Strict):
     section: str = ""
     text: str = ""
     relevance_score: float = 0.0
+    # ARCHITECTURE.md §15.3 — where a reader can open this document. Copied from
+    # the corpus like `text`, never written by a model.
+    url: str = ""
 
 
 # ---- 5. agent output ----

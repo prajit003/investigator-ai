@@ -1,0 +1,109 @@
+{
+  "_comment": [
+    "The symbol universe the UI may offer and the portfolio may be priced against.",
+    "In fixture mode store.symbols() still intersects market.json with the filings",
+    "corpus, so this list only takes effect once a live feed is available.",
+    "Every mc_scid/bse_code below was RESOLVED against the live autosuggest",
+    "endpoint, not guessed \u2014 four of an initial eleven guesses were wrong.",
+    "An unknown symbol is resolved once at runtime and cached in data/cache.db.",
+    "nse_id is the symbol the EXCHANGE currently lists, which is not always the",
+    "one people search by: NSE renamed Zomato's listing to ETERNAL. The quote",
+    "adapter checks the feed's echoed id against nse_id so a renamed company is",
+    "still priced, while a resolver that hands back the wrong scrip is caught."
+  ],
+  "watchlist": [
+    "RELIANCE",
+    "TCS",
+    "HDFCBANK",
+    "INFY",
+    "ZOMATO"
+  ],
+  "seed": [
+    {
+      "symbol": "RELIANCE",
+      "mc_scid": "RI",
+      "bse_code": "500325",
+      "isin": "INE002A01018",
+      "company_name": "Reliance Industries"
+    },
+    {
+      "symbol": "TCS",
+      "mc_scid": "TCS",
+      "bse_code": "532540",
+      "isin": "INE467B01029",
+      "company_name": "Tata Consultancy Services"
+    },
+    {
+      "symbol": "HDFCBANK",
+      "mc_scid": "HDF01",
+      "bse_code": "500180",
+      "isin": "INE040A01034",
+      "company_name": "HDFC Bank"
+    },
+    {
+      "symbol": "INFY",
+      "mc_scid": "IT",
+      "bse_code": "500209",
+      "isin": "INE009A01021",
+      "company_name": "Infosys"
+    },
+    {
+      "symbol": "ICICIBANK",
+      "mc_scid": "ICI02",
+      "bse_code": "532174",
+      "isin": "INE090A01021",
+      "company_name": "ICICI Bank"
+    },
+    {
+      "symbol": "SBIN",
+      "mc_scid": "SBI",
+      "bse_code": "500112",
+      "isin": "INE062A01020",
+      "company_name": "State Bank of India"
+    },
+    {
+      "symbol": "ITC",
+      "mc_scid": "ITC",
+      "bse_code": "500875",
+      "isin": "INE154A01025",
+      "company_name": "ITC"
+    },
+    {
+      "symbol": "LT",
+      "mc_scid": "LT",
+      "bse_code": "500510",
+      "isin": "INE018A01030",
+      "company_name": "Larsen and Toubro"
+    },
+    {
+      "symbol": "BHARTIARTL",
+      "mc_scid": "BTV",
+      "bse_code": "532454",
+      "isin": "INE397D01024",
+      "company_name": "Bharti Airtel"
+    },
+    {
+      "symbol": "MARUTI",
+      "mc_scid": "MU01",
+      "bse_code": "532500",
+      "isin": "INE585B01010",
+      "company_name": "Maruti Suzuki India"
+    },
+    {
+      "symbol": "ZOMATO",
+      "mc_scid": "Z01",
+      "bse_code": "543320",
+      "isin": "INE758T01015",
+      "company_name": "Eternal",
+      "nse_id": "ETERNAL"
+    },
+    {
+      "symbol": "ETERNAL",
+      "mc_scid": "Z01",
+      "bse_code": "543320",
+      "isin": "INE758T01015",
+      "company_name": "Eternal",
+      "nse_id": "ETERNAL"
+    }
+  ]
+}
