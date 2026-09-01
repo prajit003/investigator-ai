@@ -40,3 +40,24 @@ corpus. A displayed quote then cannot be fabricated.
 Add it to `data/market/market.json` **and** `data/filings/filings.json`.
 `validate.py` fails if a symbol has price data but no filings — the UI would
 offer it and show empty evidence.
+
+## Running the demo
+
+```bash
+pip install -r requirements.txt
+uvicorn main:app --port 8077
+```
+
+Open <http://localhost:8077>. The frontend is served by the same process, so
+there is no separate build step and no node_modules.
+
+Degraded-data demo: `KILL_AGENT=news_detective uvicorn main:app --port 8077`
+
+## Frontend rules
+
+- The UI renders exactly one object, `investigation_result`. There is no second
+  data shape and no client-side business logic — verdict, confidence and
+  personalization all arrive already decided.
+- **No CDNs, no remote fonts, no remote images.** A demo that needs wifi is a
+  demo that can fail live. `tests/test_frontend.py` fails the build on any
+  external URL in `frontend/`.

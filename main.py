@@ -54,3 +54,9 @@ async def analyze(symbol: str, user_id: str):
         return await investigate(symbol, user_id)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+# Mounted last on purpose: a mount at "/" would shadow the API routes above.
+FRONTEND = BASE / "frontend"
+if FRONTEND.exists():
+    app.mount("/", StaticFiles(directory=FRONTEND, html=True), name="frontend")
