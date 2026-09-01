@@ -1,0 +1,163 @@
+{
+  "investigation_id": "CASE-DCC846",
+  "symbol": "RELIANCE",
+  "company_name": "Reliance Industries",
+  "market_data": {
+    "symbol": "RELIANCE",
+    "company_name": "Reliance Industries",
+    "current_price": 2890.5,
+    "price_change": 64.8,
+    "price_change_percent": 2.29,
+    "volume": 8200000,
+    "average_volume": 4100000,
+    "rsi": 71.2,
+    "momentum": 0.18,
+    "volatility": 0.22
+  },
+  "signals": {
+    "price_signal": {
+      "signal": "UNAVAILABLE",
+      "confidence": 0.0,
+      "reasons": [
+        "Agent unavailable: agent not implemented yet"
+      ]
+    },
+    "volume_signal": {
+      "signal": "UNAVAILABLE",
+      "confidence": 0.0,
+      "reasons": [
+        "Agent unavailable: agent not implemented yet"
+      ]
+    },
+    "sentiment_signal": {
+      "signal": "UNAVAILABLE",
+      "confidence": 0.0,
+      "reasons": [
+        "Agent unavailable: agent not implemented yet"
+      ]
+    }
+  },
+  "agent_outputs": [
+    {
+      "agent_name": "market_detective",
+      "symbol": "RELIANCE",
+      "signal": "UNAVAILABLE",
+      "confidence": 0.0,
+      "reasons": [
+        "Agent unavailable: agent not implemented yet"
+      ],
+      "evidence": [],
+      "status": "FAILED",
+      "latency_ms": 0
+    },
+    {
+      "agent_name": "news_detective",
+      "symbol": "RELIANCE",
+      "signal": "UNAVAILABLE",
+      "confidence": 0.0,
+      "reasons": [
+        "Agent unavailable: agent not implemented yet"
+      ],
+      "evidence": [],
+      "status": "FAILED",
+      "latency_ms": 0
+    },
+    {
+      "agent_name": "filing_detective",
+      "symbol": "RELIANCE",
+      "signal": "UNAVAILABLE",
+      "confidence": 0.0,
+      "reasons": [
+        "Agent unavailable: agent not implemented yet"
+      ],
+      "evidence": [],
+      "status": "FAILED",
+      "latency_ms": 0
+    }
+  ],
+  "retrieved_chunks": [],
+  "evidence": [],
+  "bull_case": null,
+  "bear_case": null,
+  "judge_output": {
+    "verdict": "INSUFFICIENT_DATA",
+    "confidence": 0.0,
+    "summary": "Insufficient Data for a conservative investor: 0 bullish and 0 bearish of 0 reporting agents.",
+    "key_reasons": [],
+    "key_risks": [],
+    "selected_evidence": [],
+    "agent_agreement": 0,
+    "agent_conflict": false
+  },
+  "personalization": {
+    "risk_profile": "CONSERVATIVE",
+    "risk_score": 25,
+    "investment_horizon": "LONG_TERM",
+    "stock_exposure": 0.3,
+    "personalized_reason": "Every agent failed, so no view can be justified. We report this rather than presenting an unsupported recommendation. Confidence reduced: market_detective, news_detective, filing_detective unavailable."
+  },
+  "portfolio": {
+    "portfolio_value": 500000.0,
+    "holdings": [
+      {
+        "symbol": "RELIANCE",
+        "quantity": 52.0,
+        "average_price": 2884.62,
+        "current_value": 150000.0
+      },
+      {
+        "symbol": "TCS",
+        "quantity": 30.0,
+        "average_price": 3333.33,
+        "current_value": 100000.0
+      },
+      {
+        "symbol": "HDFCBANK",
+        "quantity": 60.0,
+        "average_price": 1666.67,
+        "current_value": 100000.0
+      },
+      {
+        "symbol": "ITC",
+        "quantity": 200.0,
+        "average_price": 375.0,
+        "current_value": 75000.0
+      },
+      {
+        "symbol": "INFY",
+        "quantity": 50.0,
+        "average_price": 1500.0,
+        "current_value": 75000.0
+      }
+    ],
+    "sector_exposure": {
+      "ENERGY": 0.3,
+      "IT": 0.35,
+      "FINANCIALS": 0.2,
+      "FMCG": 0.15
+    },
+    "stock_exposure": 0.3,
+    "concentration_score": 30.0
+  },
+  "scenario": null,
+  "metrics": {
+    "total_latency_ms": 0,
+    "agent_latency_ms": 0,
+    "signal_confidence": 0.0,
+    "evidence_coverage": 0.0,
+    "concentration_score": 30.0,
+    "agents_complete": 0,
+    "agents_failed": 3
+  },
+  "data_quality": {
+    "market_data": "UNAVAILABLE",
+    "news_data": "UNAVAILABLE",
+    "filing_data": "UNAVAILABLE",
+    "overall_quality": "POOR",
+    "warnings": [
+      "market_detective unavailable; confidence reduced.",
+      "news_detective unavailable; confidence reduced.",
+      "filing_detective unavailable; confidence reduced."
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+name: CI
+
+# Runs on every push and every pull request. A red check here means the
+# contract was broken — read the failure, it names the file and the fix.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Contract validation
+        run: python validate.py
+      - name: Grounding tests
+        run: python tests/test_grounding.py
+      - name: Synthesis tests
+        run: python tests/test_synthesis.py

@@ -1,0 +1,47 @@
+[
+  {
+    "user": {
+      "user_id": "u1", "user_name": "Priya Sharma",
+      "risk_profile": "CONSERVATIVE", "risk_score": 25,
+      "investment_horizon": "LONG_TERM"
+    },
+    "portfolio": {
+      "portfolio_value": 500000,
+      "holdings": [
+        {"symbol": "RELIANCE", "quantity": 52, "average_price": 2884.62, "current_value": 150000},
+        {"symbol": "TCS",      "quantity": 30, "average_price": 3333.33, "current_value": 100000},
+        {"symbol": "HDFCBANK", "quantity": 60, "average_price": 1666.67, "current_value": 100000},
+        {"symbol": "ITC",      "quantity": 200, "average_price": 375.00, "current_value":  75000},
+        {"symbol": "INFY",     "quantity": 50, "average_price": 1500.00, "current_value":  75000}
+      ],
+      "sector_exposure": {"ENERGY": 0.30, "IT": 0.35, "FINANCIALS": 0.20, "FMCG": 0.15},
+      "stock_exposure": 0.30,
+      "concentration_score": 30.0
+    }
+  },
+  {
+    "user": {
+      "user_id": "u2", "user_name": "Arjun Mehta",
+      "risk_profile": "AGGRESSIVE", "risk_score": 78,
+      "investment_horizon": "SHORT_TERM"
+    },
+    "portfolio": {
+      "portfolio_value": 500000,
+      "holdings": [
+        {"symbol": "ZOMATO",   "quantity": 250, "average_price": 240.00, "current_value": 60000},
+        {"symbol": "RELIANCE", "quantity": 20, "average_price": 2900.00, "current_value": 58000},
+        {"symbol": "TCS",      "quantity": 17, "average_price": 3352.94, "current_value": 57000},
+        {"symbol": "PAYTM",    "quantity": 100, "average_price": 560.00, "current_value": 56000},
+        {"symbol": "TATAMOTORS","quantity": 60, "average_price": 916.67, "current_value": 55000},
+        {"symbol": "HDFCBANK", "quantity": 32, "average_price": 1687.50, "current_value": 54000},
+        {"symbol": "ITC",      "quantity": 140, "average_price": 378.57, "current_value": 53000},
+        {"symbol": "INFY",     "quantity": 35, "average_price": 1485.71, "current_value": 52000},
+        {"symbol": "SBIN",     "quantity": 65, "average_price": 784.62, "current_value": 51000},
+        {"symbol": "WIPRO",    "quantity": 100, "average_price": 540.00, "current_value": 54000}
+      ],
+      "sector_exposure": {"IT": 0.33, "FINANCIALS": 0.21, "CONSUMER_TECH": 0.23, "AUTO": 0.11, "ENERGY": 0.12},
+      "stock_exposure": 0.12,
+      "concentration_score": 12.0
+    }
+  }
+]

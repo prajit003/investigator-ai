@@ -1,151 +1,132 @@
-from pydantic import BaseModel
-from typing import List
-import json
-import os
+"""
+The judge / synthesis layer.
 
-class AgentOutput(BaseModel):
-    name: str
-    verdict: str  # "BULLISH", "BEARISH", "NEUTRAL"
-    confidence: float
-    status: str  # "AVAILABLE", "UNAVAILABLE"
+RULES DECIDE THE VERDICT. Prose only explains it afterwards. If a model were
+allowed to pick the verdict, two different risk profiles would occasionally
+agree on identical inputs — and the personalization requirement is demonstrated
+by toggling the profile in front of a judge, so it must be deterministic.
 
-class Holding(BaseModel):
-    symbol: str
-    quantity: float
-    average_price: float
-    current_value: float
+Thresholds below are P5's, preserved as written; only the types changed.
+"""
+from typing import List, Tuple
 
-class Portfolio(BaseModel):
-    portfolio_value: float
-    holdings: List[Holding]
+from contracts import (
+    AgentOutput, JudgeOutput, Personalization, Portfolio, UserProfile, Verdict,
+)
 
-class UserProfile(BaseModel):
-    user_id: str
-    user_name: str
-    risk_profile: str
-    loss_aversion: float
-    max_position_pct: float
-    portfolio: Portfolio
+CONSERVATIVE_CONFIDENCE_CAP = 0.7
+CONSERVATIVE_MIN_BULLISH = 2
+CONSERVATIVE_CONCENTRATION_CEILING = 25.0   # percent of portfolio in one holding
+STRONG_BEAR_CONFIDENCE = 0.6
+AGGRESSIVE_HIGH_CONFIDENCE = 0.7
 
-class SynthesisOutput(BaseModel):
-    recommendation: str
-    profile_effect: str
-    conflicts: str
-    rationale: str
-    unavailable_agents: List[str]
 
-def synthesize(agents: list[AgentOutput], profile: UserProfile) -> SynthesisOutput:
-    # 1. Unavailable agents
-    unavailable = [a.name for a in agents if a.status == "UNAVAILABLE"]
-    active = [a for a in agents if a.status != "UNAVAILABLE"]
+def _concentration(portfolio: Portfolio | None) -> float:
+    if not portfolio or not portfolio.holdings or portfolio.portfolio_value <= 0:
+        return 0.0
+    return round(max(h.current_value for h in portfolio.holdings)
+                 / portfolio.portfolio_value * 100, 2)
 
-    # 2. Extract agent verdicts
-    bullish_agents = []
-    bearish_agents = []
-    
-    for a in active:
-        eff_conf = a.confidence
-        # Conservative: cap confidence at 0.7
-        if profile.risk_profile.lower() == "conservative" and eff_conf > 0.7:
-            eff_conf = 0.7
-            
-        if a.verdict.upper() == "BULLISH":
-            bullish_agents.append((a, eff_conf))
-        elif a.verdict.upper() == "BEARISH":
-            bearish_agents.append((a, eff_conf))
 
-    # 3. Detect conflicts
-    conflicts_str = "None"
-    if bullish_agents and bearish_agents:
-        bull_names = ", ".join(f"{a.name}" for a, _ in bullish_agents)
-        bear_names = ", ".join(f"{a.name}" for a, _ in bearish_agents)
-        conflicts_str = f"{bull_names} BULLISH vs {bear_names} BEARISH"
+def judge(agents: List[AgentOutput], user: UserProfile,
+          portfolio: Portfolio | None = None) -> Tuple[JudgeOutput, Personalization]:
+    live = [a for a in agents if a.status != "FAILED"]
+    unavailable = [a.agent_name for a in agents if a.status == "FAILED"]
+    conservative = user.risk_profile == "CONSERVATIVE"
 
-    # 4. Calculate Concentration Score (max holding %)
-    concentration_score = 0
-    if profile.portfolio.portfolio_value > 0 and profile.portfolio.holdings:
-        max_holding_val = max(h.current_value for h in profile.portfolio.holdings)
-        concentration_score = (max_holding_val / profile.portfolio.portfolio_value) * 100
+    # Conservative investors do not get to act on high confidence. Cap first,
+    # so every downstream rule sees the capped number.
+    def eff(a: AgentOutput) -> float:
+        return min(a.confidence, CONSERVATIVE_CONFIDENCE_CAP) if conservative else a.confidence
 
-    # 5. Apply Rules
-    recommendation = "HOLD"
-    profile_effect = "None"
+    bulls = [(a, eff(a)) for a in live if a.signal == "BULLISH"]
+    bears = [(a, eff(a)) for a in live if a.signal == "BEARISH"]
+    concentration = _concentration(portfolio)
 
-    is_conservative = profile.risk_profile.lower() == "conservative"
-    
-    if is_conservative:
-        num_bullish = len(bullish_agents)
-        has_strong_bear = any(eff_conf > 0.6 for _, eff_conf in bearish_agents)
-        
-        if num_bullish >= 2 and not has_strong_bear:
-            if concentration_score > 25:
-                recommendation = "HOLD"
-                profile_effect = f"Downgraded BUY -> HOLD: only {num_bullish} of {len(active)} available agents bullish and portfolio concentration {concentration_score:.0f}% exceeds the 25% conservative ceiling. An aggressive profile would return BUY here."
+    conflict = bool(bulls and bears)
+    conflicts = ([f"{', '.join(a.agent_name for a, _ in bulls)} BULLISH vs "
+                  f"{', '.join(a.agent_name for a, _ in bears)} BEARISH"] if conflict else [])
+
+    verdict: Verdict = "CAUTION"
+    reason = ""
+
+    if not live:
+        verdict = "INSUFFICIENT_DATA"
+        reason = ("Every agent failed, so no view can be justified. We report this "
+                  "rather than presenting an unsupported recommendation.")
+    elif conservative:
+        strong_bear = any(c > STRONG_BEAR_CONFIDENCE for _, c in bears)
+        if len(bulls) >= CONSERVATIVE_MIN_BULLISH and not strong_bear:
+            if concentration > CONSERVATIVE_CONCENTRATION_CEILING:
+                verdict = "CAUTION"
+                reason = (f"Downgraded POSITIVE to CAUTION: {len(bulls)} of {len(live)} "
+                          f"available agents are bullish, but your largest holding is "
+                          f"{concentration:.0f}% of the portfolio, above the "
+                          f"{CONSERVATIVE_CONCENTRATION_CEILING:.0f}% conservative ceiling. "
+                          f"An aggressive profile would return POSITIVE here.")
             else:
-                recommendation = "BUY"
-                profile_effect = "Conservative criteria met for BUY."
+                verdict = "POSITIVE"
+                reason = (f"{len(bulls)} of {len(live)} agents bullish with no strong "
+                          f"bearish objection, and concentration {concentration:.0f}% is "
+                          f"within the conservative ceiling.")
+        elif strong_bear:
+            verdict = "NEGATIVE" if len(bears) > len(bulls) else "CAUTION"
+            reason = (f"A bearish agent above {STRONG_BEAR_CONFIDENCE:.1f} confidence blocks a "
+                      f"positive call for a conservative profile. An aggressive profile "
+                      f"would tolerate a single dissenting agent.")
         else:
-            recommendation = "HOLD"
-            if has_strong_bear:
-                profile_effect = "Maintained HOLD: BEARISH agent with confidence > 0.6 blocked BUY. An aggressive profile might tolerate this."
-            else:
-                profile_effect = f"Maintained HOLD: only {num_bullish} BULLISH agents (requires >= 2)."
-
+            verdict = "NEGATIVE" if bears and not bulls else "CAUTION"
+            reason = (f"Only {len(bulls)} bullish agent(s); a conservative profile requires "
+                      f"at least {CONSERVATIVE_MIN_BULLISH}.")
     else:
-        # aggressive
-        high_conf_bulls = [a for a, c in bullish_agents if c >= 0.7] # no cap, checking if >= 0.7 (high)
-        num_bears = len(bearish_agents)
-        
-        if len(high_conf_bulls) >= 1 and num_bears <= 1:
-            recommendation = "BUY"
-            profile_effect = f"Aggressive profile returned BUY: {len(high_conf_bulls)} high-confidence BULLISH agent(s) found, tolerating {num_bears} dissenting BEARISH agent(s)."
+        high_conf_bulls = [a for a, c in bulls if c >= AGGRESSIVE_HIGH_CONFIDENCE]
+        if high_conf_bulls and len(bears) <= 1:
+            verdict = "STRONG_POSITIVE" if len(high_conf_bulls) >= 2 and not bears else "POSITIVE"
+            reason = (f"{len(high_conf_bulls)} high-confidence bullish agent(s); an aggressive "
+                      f"profile acts on single-agent conviction and tolerates "
+                      f"{len(bears)} dissenting agent(s). A conservative profile would "
+                      f"require {CONSERVATIVE_MIN_BULLISH} agreeing agents.")
+        elif len(bears) > len(bulls):
+            verdict = "NEGATIVE"
+            reason = f"{len(bears)} bearish agent(s) outweigh {len(bulls)} bullish."
         else:
-            recommendation = "HOLD"
-            profile_effect = "Aggressive criteria for BUY not met."
+            verdict = "CAUTION"
+            reason = "No agent reached the conviction threshold for an aggressive position."
 
-    # 6. LLM Rationale Generation
-    # Fallback used if LLM call fails
-    fallback_rationale = f"Based on the rules, the recommendation is {recommendation}. {profile_effect}"
-    if conflicts_str != "None":
-        fallback_rationale += f" Noted conflicts: {conflicts_str}."
+    if unavailable:
+        reason += (f" Confidence reduced: {', '.join(unavailable)} unavailable.")
 
-    rationale = fallback_rationale
-    
-    try:
-        # If this was real, we would call LLM to generate rationale.
-        # "the LLM writes rationale only: a plain-English paragraph explaining the already-decided recommendation, referencing the agents by name."
-        import google.generativeai as genai
-        raise Exception("Simulated LLM failure to trigger fallback.")
-    except Exception:
-        pass
+    scored = [c for _, c in bulls + bears]
+    confidence = round(sum(scored) / len(scored), 3) if scored else 0.0
+    if unavailable:
+        confidence = round(confidence * (len(live) / max(len(agents), 1)), 3)
 
-    return SynthesisOutput(
-        recommendation=recommendation,
-        profile_effect=profile_effect,
-        conflicts=conflicts_str,
-        rationale=rationale,
-        unavailable_agents=unavailable
+    judge_output = JudgeOutput(
+        verdict=verdict,
+        confidence=confidence,
+        summary=_summary(verdict, user, live, bulls, bears, conflict),
+        key_reasons=[r for a in live for r in a.reasons][:5],
+        key_risks=[r for a, _ in bears for r in a.reasons][:3],
+        selected_evidence=[e for a in live for e in a.evidence][:3],
+        agent_agreement=max(len(bulls), len(bears)),
+        agent_conflict=conflict,
     )
+    personalization = Personalization(
+        risk_profile=user.risk_profile,
+        risk_score=user.risk_score,
+        investment_horizon=user.investment_horizon,
+        stock_exposure=portfolio.stock_exposure if portfolio else 0.0,
+        personalized_reason=reason,
+    )
+    return judge_output, personalization
 
-if __name__ == '__main__':
-    # STEP 6: write a test asserting that for the CONFLICTED ticker, u1 and u2 return DIFFERENT recommendation values.
-    # We create a conflicted scenario with 2 bullish and 1 weak bearish to trigger the exact downgrade message.
-    a1 = AgentOutput(name="technical", verdict="BULLISH", confidence=0.8, status="AVAILABLE")
-    a2 = AgentOutput(name="fundamental", verdict="BULLISH", confidence=0.8, status="AVAILABLE")
-    a3 = AgentOutput(name="sentiment", verdict="BEARISH", confidence=0.5, status="AVAILABLE") # Weak bear
-    agents = [a1, a2, a3]
-    
-    with open("fixtures/profiles.json", "r") as f:
-        profiles = json.load(f)
-        
-    u1 = UserProfile(**profiles["u1"])
-    u2 = UserProfile(**profiles["u2"])
-    
-    out1 = synthesize(agents, u1)
-    out2 = synthesize(agents, u2)
-    
-    assert out1.recommendation != out2.recommendation, f"u1: {out1.recommendation}, u2: {out2.recommendation}"
-    assert out1.recommendation == "HOLD"
-    assert out2.recommendation == "BUY"
-    print(f"Test passed! u1 (conservative) = {out1.recommendation}, u2 (aggressive) = {out2.recommendation}")
-    print(f"u1 profile effect: {out1.profile_effect}")
+
+def _summary(verdict, user, live, bulls, bears, conflict) -> str:
+    """Deterministic prose. Swap for an LLM paragraph later if time allows —
+    but the verdict above must stay rule-decided."""
+    parts = [f"{verdict.replace('_', ' ').title()} for a "
+             f"{user.risk_profile.lower()} investor: "
+             f"{len(bulls)} bullish and {len(bears)} bearish of {len(live)} reporting agents."]
+    if conflict:
+        parts.append("The agents disagree, and we surface that rather than averaging it away.")
+    return " ".join(parts)
